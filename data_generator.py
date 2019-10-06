@@ -32,9 +32,13 @@ class DataGenerator(object):
             bins.insert(random_bin_index, new_bins[1])
         return bins
 
+    def _transform_instance_visual_to_np_array(self, bins, dimensions=2):
+        return np.array([x[:dimensions] for x in bins])
+
     def gen_instance(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
-        bins = [x[:dimensions] for x in self.gen_instance_visual(n, w, h, seed=seed)]
+        bins = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
         return np.array(bins)
+    
 
     def _split_bin(self, _bin, axis, value):
         assert len(_bin) == 3
@@ -65,7 +69,7 @@ class DataGenerator(object):
                 np.random.shuffle(sequence) # Shuffle sequence
             input_batch.append(sequence) # Store batch
         return input_batch
-    
+
     def get_cmap(self, n, name='Accent'):
         '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
         RGB color; the keyword argument name must be a standard mpl colormap name.'''

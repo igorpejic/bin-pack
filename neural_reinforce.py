@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 MIT License
-
 Copyright (c) 2018 Michel Deudon
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 """
 
 from __future__ import print_function
@@ -194,10 +194,9 @@ def str2bool(v):
 # Data
 data_arg = add_argument_group('Data')
 data_arg.add_argument('--batch_size', type=int, default=256, help='batch size')
-data_arg.add_argument('--max_length', type=int, default=50, help='max_length')
-data_arg.add_argument('--n', type=int, default=256, help='number of bins')
-data_arg.add_argument('--w', type=int, default=256, help='width of bin to fit in')
-data_arg.add_argument('--h', type=int, default=256, help='width of bin to fit in')
+data_arg.add_argument('--n', type=int, default=20, help='number of bins')
+data_arg.add_argument('--w', type=int, default=50, help='width of bin to fit in')
+data_arg.add_argument('--h', type=int, default=50, help='width of bin to fit in')
 data_arg.add_argument('--dimension', type=int, default=2, help='city dimension')
 
 # Network
@@ -237,7 +236,6 @@ class Actor(object):
         
         # Data config
         self.batch_size = config.batch_size # batch size
-        self.max_length = config.max_length # number of bins
         self.n = config.n # number of bins
         self.w = config.w # width of box to fit in
         self.h = config.h # height of box to fit in
@@ -263,7 +261,7 @@ class Actor(object):
         self.is_training = config.is_training # swith to False if test mode
 
         # Tensor block holding the input sequences [Batch Size, Sequence Length, Features]
-        self.input_ = tf.placeholder(tf.float32, [None, self.max_length, self.dimension], name="input_coordinates")
+        self.input_ = tf.placeholder(tf.float32, [None, self.n, self.dimension], name="input_coordinates")
         
         with tf.variable_scope("actor"): self.encode_decode()
         with tf.variable_scope("critic"): self.build_critic()
@@ -279,7 +277,7 @@ class Actor(object):
             actor_encoding = tf.tile(actor_encoding,[self.batch_size,1,1])
         
         idx_list, log_probs, entropies = [], [], [] # tours index, log_probs, entropies
-        mask = tf.zeros((self.batch_size, self.max_length)) # mask for actions
+        mask = tf.zeros((self.batch_size, self.n)) # mask for actions
         
         n_hidden = actor_encoding.get_shape().as_list()[2] # input_embed
         W_ref = tf.get_variable("W_ref",[1, n_hidden, self.num_units],initializer=self.initializer)
@@ -295,7 +293,7 @@ class Actor(object):
         W_2 =tf.get_variable("W_2",[n_hidden, self.query_dim],initializer=self.initializer)
         W_3 =tf.get_variable("W_3",[n_hidden, self.query_dim],initializer=self.initializer)
     
-        for step in range(self.max_length): # sample from POINTER      
+        for step in range(self.n): # sample from POINTER      
             query = tf.nn.relu(tf.matmul(query1, W_1) + tf.matmul(query2, W_2) + tf.matmul(query3, W_3))
             logits = pointer(encoded_ref=encoded_ref, query=query, mask=mask, W_ref=W_ref, W_q=W_q, v=v, C=config.C, temperature=config.temperature)
             prob = distr.Categorical(logits) # logits = masked_scores
@@ -304,7 +302,7 @@ class Actor(object):
             idx_list.append(idx) # tour index
             log_probs.append(prob.log_prob(idx)) # log prob
             entropies.append(prob.entropy()) # entropies
-            mask = mask + tf.one_hot(idx, self.max_length) # mask
+            mask = mask + tf.one_hot(idx, self.n) # mask
             
             idx_ = tf.stack([tf.range(self.batch_size,dtype=tf.int32), idx],1) # idx with batch   
             query3 = query2
@@ -320,15 +318,28 @@ class Actor(object):
         
         
     def build_reward(self): # reorder input % tour and return tour length (euclidean distance)
-        self.permutations = tf.stack([tf.tile(tf.expand_dims(tf.range(self.batch_size,dtype=tf.int32),1),[1,self.max_length+1]),self.tour],2)
+        self.permutations = tf.stack(  # this just creates a vectors with repeating idxs so we can gather later
+            [
+                tf.tile(tf.expand_dims(tf.range(self.batch_size,dtype=tf.int32), 1), [1, self.n+1]),
+                self.tour
+            ], 2
+        )
         if self.is_training==True:
             self.ordered_input_ = tf.gather_nd(self.input_,self.permutations)
         else:
             self.ordered_input_ = tf.gather_nd(tf.tile(self.input_,[self.batch_size,1,1]),self.permutations)
+
         self.ordered_input_ = tf.transpose(self.ordered_input_,[2,1,0]) # [features, seq length +1, batch_size]   Rq: +1 because end = start    
         
         ordered_x_ = self.ordered_input_[0] # ordered x, y coordinates [seq length +1, batch_size]
+        print(ordered_x_.shape)
         ordered_y_ = self.ordered_input_[1] # ordered y coordinates [seq length +1, batch_size]          
+        print(ordered_y_.shape)
+        
+        # here we need to check if the first x configurations constructed a valid first row LBF
+
+        # we go row by row in LBF keeping track of lowest height 
+
         delta_x2 = tf.transpose(tf.square(ordered_x_[1:]-ordered_x_[:-1]),[1,0]) # [batch_size, seq length]        delta_x**2
         delta_y2 = tf.transpose(tf.square(ordered_y_[1:]-ordered_y_[:-1]),[1,0]) # [batch_size, seq length]        delta_y**2
 
@@ -417,7 +428,7 @@ with tf.Session() as sess: # start session
 
 config.is_training = False
 config.batch_size = 10 ##### #####
-config.max_length = 50 ##### #####
+config.n_bins = 20 ##### #####
 config.temperature = 1.2 ##### #####
 
 tf.reset_default_graph()
@@ -435,7 +446,7 @@ with tf.Session() as sess:  # start session
     predictions_length, predictions_length_w2opt = [], []
     for i in tqdm(range(1000)): # test instance
         seed_ = 1+i
-        input_batch = dataset.test_batch(1, actor.max_length, n, w, h, actor.dimension, seed=seed_, shuffle=False)
+        input_batch = dataset.test_batch(1, actor.n, actor.w, actor.h, actor.dimension, seed=seed_, shuffle=False)
         feed = {actor.input_: input_batch} # Get feed dict
         tour, reward = sess.run([actor.tour, actor.reward], feed_dict=feed) # sample tours
 
