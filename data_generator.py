@@ -2,13 +2,14 @@ import numpy as np
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from sklearn.decomposition import PCA
 
 class DataGenerator(object):
 
     def __init__(self):
         pass
 
-    def gen_instance(self, n, w, h, seed=0): # Generate random bin-packing instance
+    def gen_instance_visual(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
         if seed!=0:
             np.random.seed(seed)
         bins = [[w, h, (0, 0)]]
@@ -31,6 +32,10 @@ class DataGenerator(object):
             bins.insert(random_bin_index, new_bins[1])
         return bins
 
+    def gen_instance(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
+        bins = [x[:dimensions] for x in self.gen_instance_visual(n, w, h, seed=seed)]
+        return np.array(bins)
+
     def _split_bin(self, _bin, axis, value):
         assert len(_bin) == 3
         assert type(_bin[0]) == int, type(_bin[0])
@@ -43,17 +48,17 @@ class DataGenerator(object):
             ret = [ [_bin[0], value, _bin[2]], [_bin[0], _bin[1] - value, (_bin[2][0], _bin[2][1] + value)] ] 
         return ret
 
-    def train_batch(self, batch_size, n, w, h, seed=0):
+    def train_batch(self, batch_size, n, w, h, dimensions=2, seed=0):
         input_batch = []
         for _ in range(batch_size):
-            input_ = self.gen_instance(n, w, h, seed=seed)
+            input_ = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
             input_batch.append(input_)
         return input_batch
 
 
-    def test_batch(self, batch_size, n, w, h, seed=0, shuffle=False): # Generate random batch for testing procedure
+    def test_batch(self, batch_size, n, w, h, dimensions=2, seed=0, shuffle=False): # Generate random batch for testing procedure
         input_batch = []
-        input_ = self.gen_instance(n, w, h, seed=seed)
+        input_ = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
         for _ in range(batch_size): 
             sequence = np.copy(input_)
             if shuffle==True: 
