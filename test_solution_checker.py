@@ -29,7 +29,7 @@ class TestDataGenerator(unittest.TestCase):
         h = 40
         dg = DataGenerator()
         some_instance_visual = dg.gen_instance_visual(n, w, h)
-        perfect_bin_configuration = sorted(some_instance_visual, key=lambda x: (x[2][0], x[2][1]))
+        perfect_bin_configuration = sorted(some_instance_visual, key=lambda x: (x[2][1], x[2][0]))
         some_instance_np_array = dg._transform_instance_visual_to_np_array(some_instance_visual)
 
         solution_checker = SolutionChecker(n, h, w)
@@ -53,7 +53,7 @@ class TestDataGenerator(unittest.TestCase):
         #     -----------------------|
         #                40
 
-        solution_checker.LFBs = SortedKeyList([], key=lambda x: x[1])
+        solution_checker.LFBs = SortedKeyList([], key=lambda x: (x[1], x[0]))
         solution_checker.LFBs.add((40, 0))
         solution_checker.LFBs.add((0, 11))
         solution_checker.LFBs.add((40, 11))

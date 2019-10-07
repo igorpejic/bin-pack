@@ -1,5 +1,9 @@
+import matplotlib
+from itertools import cycle
+import random
 import numpy as np
 import numpy as np
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import math
 from sklearn.decomposition import PCA
@@ -77,13 +81,8 @@ class DataGenerator(object):
 
     def visualize_2D(self, bins, w, h): # Plot tour
 
-        import matplotlib.pyplot as plt
-        import matplotlib.patches as patches
-        import matplotlib
         matplotlib.use('GTK')
-        import random
         np.random.seed(4)
-        from itertools import cycle
         cycol = cycle('bgrcmk')
 
         fig1 = plt.figure()
@@ -109,4 +108,6 @@ class DataGenerator(object):
         plt.xlim(0, w)
         plt.ylim(0, h)
         plt.figure(1)
-        plt.show()
+        #plt.show()
+        plt.pause(0.2)
+        plt.close()

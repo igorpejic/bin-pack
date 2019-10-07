@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import math
 import bisect
 from sklearn.decomposition import PCA
+from data_generator import DataGenerator
 
 from sortedcontainers import SortedKeyList
 
@@ -21,24 +22,42 @@ class SolutionChecker(object):
         '''
         perfect reward is w * h - 0
         '''
-        reward = 0
+        reward = self.w * self.h
 
+        bins_processed = []
         for _bin in bins:
-            if not self.is_bin_outside_borders(_bin):
-                old_lfb = self.LFBs[0]
-
-                right_point = self._get_closest_right_point()
-
-                self.LFBs.add((old_lfb[0], old_lfb[1] + _bin[1]))
-
-                print(_bin, right_point, self.LFBs)
-                self.LFBs.add((right_point[0], right_point[1] + _bin[1]))
-                self.LFBs.pop(0)
-
+            self.visualize_extreme_points()
+            import pdb; pdb.set_trace()
+            if self.is_bin_outside_borders(_bin):
+                # TODO
+                reward -= 1
             else:
                 # remove LFB as the bin could not fill it
                 print(_bin, self.LFBs, 'could not fill')
-                pass
+
+                old_lfb = self.LFBs[0]
+
+
+                left_point = (old_lfb[0], old_lfb[1] + _bin[1])
+                low_right_point = old_lfb[0] + _bin[0], old_lfb[1]
+                high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
+
+                if left_point[1] == self.h:  # reached the ceiling
+                    self.LFBs.add(low_right_point)
+                    self.LFBs.add(high_right_point)
+                else:
+                    self.LFBs.add(left_point)
+
+                    self.LFBs.add(low_right_point)
+                    self.LFBs.add(high_right_point)
+
+                # TODO: now check which lfbs points are covered by the new edge
+
+                self.LFBs.pop(0)
+                self.visualize_extreme_points()
+            
+            bins_processed.append(_bin)
+            # DataGenerator().visualize_2D(bins_processed, self.w, self.h)
 
         return reward
 
@@ -70,3 +89,26 @@ class SolutionChecker(object):
 
     def _get_closest_right(self):
         return self._get_closest_right_point()[0]
+
+
+    def visualize_extreme_points(self):
+
+        import matplotlib
+        matplotlib.use('GTK')
+        np.random.seed(4)
+
+        fig1 = plt.figure()
+        ax1 = fig1.add_subplot(111, aspect='equal')
+        ax1.set_xticks(list(range(self.w)))
+        ax1.set_yticks(list(range(self.h)))
+        ax1.grid(which='both')
+        x = [x[0] for x in self.LFBs]
+        y = [x[1] for x in self.LFBs]
+        plt.scatter(x, y)
+
+        plt.xlim(0, self.w)
+        plt.ylim(0, self.h)
+        plt.figure(1)
+        plt.show()
+        #plt.pause(0.2)
+        plt.close()
