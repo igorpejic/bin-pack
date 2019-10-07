@@ -335,6 +335,9 @@ class Actor(object):
         print(ordered_x_.shape)
         ordered_y_ = self.ordered_input_[1] # ordered y coordinates [seq length +1, batch_size]          
         print(ordered_y_.shape)
+
+        # TODO: check reward here using solution_checker
+        raise False
         
         # here we need to check if the first x configurations constructed a valid first row LBF
 
