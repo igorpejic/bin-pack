@@ -63,3 +63,6 @@ class TestDataGenerator(unittest.TestCase):
 
         _bin = (12, 10)
         self.assertTrue(solution_checker.is_bin_outside_borders(_bin))
+
+if __name__=='__main__':
+    unittest.main()

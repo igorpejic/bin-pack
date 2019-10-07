@@ -34,15 +34,15 @@ class SolutionChecker(object):
             else:
                 old_lfb = self.LFBs[0]
 
-
-                left_point = (old_lfb[0], old_lfb[1] + _bin[1])
+                left_point = old_lfb[0], old_lfb[1] + _bin[1]
                 low_right_point = old_lfb[0] + _bin[0], old_lfb[1]
                 high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
 
                 if left_point[1] == self.h:  # reached the ceiling
+                    print('reached the ceiling')
                     # self.LFBs.add(low_right_point)
                     # self.LFBs.add(high_right_point)
-                    lfbs_to_add.extend([low_right_point, high_right_point])
+                    lfbs_to_add.extend([low_right_point])
                 else:
                     lfbs_to_add.extend([left_point, low_right_point, high_right_point])
                     #self.LFBs.add(left_point)
@@ -63,11 +63,8 @@ class SolutionChecker(object):
                         overlaps or left_edge_equal or right_edge_equal
                 ):
                     elements_to_remove.append(_lfb)
-                print(_lfb, left_point, high_right_point, self.LFBs, elements_to_remove, self.LFBs)
-                print(overlaps, left_edge_equal, right_edge_equal)
-
-
                 
+            print(elements_to_remove)
             for element in elements_to_remove:
                 self.LFBs.remove(element)
 
