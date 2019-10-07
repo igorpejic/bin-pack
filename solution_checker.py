@@ -26,15 +26,12 @@ class SolutionChecker(object):
 
         bins_processed = []
         for _bin in bins:
-            self.visualize_extreme_points()
-            import pdb; pdb.set_trace()
+            lfbs_to_add = []
             if self.is_bin_outside_borders(_bin):
                 # TODO
                 reward -= 1
-            else:
-                # remove LFB as the bin could not fill it
                 print(_bin, self.LFBs, 'could not fill')
-
+            else:
                 old_lfb = self.LFBs[0]
 
 
@@ -43,21 +40,42 @@ class SolutionChecker(object):
                 high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
 
                 if left_point[1] == self.h:  # reached the ceiling
-                    self.LFBs.add(low_right_point)
-                    self.LFBs.add(high_right_point)
+                    # self.LFBs.add(low_right_point)
+                    # self.LFBs.add(high_right_point)
+                    lfbs_to_add.extend([low_right_point, high_right_point])
                 else:
-                    self.LFBs.add(left_point)
+                    lfbs_to_add.extend([left_point, low_right_point, high_right_point])
+                    #self.LFBs.add(left_point)
 
-                    self.LFBs.add(low_right_point)
-                    self.LFBs.add(high_right_point)
+                    #self.LFBs.add(low_right_point)
+                    #self.LFBs.add(high_right_point)
 
-                # TODO: now check which lfbs points are covered by the new edge
+            # TODO: now check which lfbs points are covered by the new edge
+            elements_to_remove = []
+            for _lfb in self.LFBs:
+                if left_point[1] < _lfb[1]:  # if the new edge is not higher it does not cover it for sure
+                    continue
 
-                self.LFBs.pop(0)
-                self.visualize_extreme_points()
-            
+                overlaps = left_point[0] < _lfb[0] and high_right_point[0] > _lfb[0]
+                left_edge_equal = left_point[0] == _lfb[0] and high_right_point[0] >= _lfb[0]
+                right_edge_equal = (left_point[0] < _lfb[0] and high_right_point[0] >= _lfb[0])
+                if (  # covering condition
+                        overlaps or left_edge_equal or right_edge_equal
+                ):
+                    elements_to_remove.append(_lfb)
+                print(_lfb, left_point, high_right_point, self.LFBs, elements_to_remove, self.LFBs)
+                print(overlaps, left_edge_equal, right_edge_equal)
+
+
+                
+            for element in elements_to_remove:
+                self.LFBs.remove(element)
+
+            for element in lfbs_to_add:
+                self.LFBs.add(element)
+
             bins_processed.append(_bin)
-            # DataGenerator().visualize_2D(bins_processed, self.w, self.h)
+            DataGenerator().visualize_2D(bins_processed, self.w, self.h, extreme_points=self.LFBs)
 
         return reward
 

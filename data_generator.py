@@ -79,7 +79,7 @@ class DataGenerator(object):
         RGB color; the keyword argument name must be a standard mpl colormap name.'''
         return plt.cm.get_cmap(name)
 
-    def visualize_2D(self, bins, w, h): # Plot tour
+    def visualize_2D(self, bins, w, h, extreme_points=None): # Plot tour
 
         matplotlib.use('GTK')
         np.random.seed(4)
@@ -101,6 +101,11 @@ class DataGenerator(object):
             )
             ax1.text(_bin[2][0] + _bin[0] / 2 - 2 , _bin[2][1] + _bin[1] / 2, str(_bin))
 
+        if extreme_points:
+            x = [x[0] for x in extreme_points]
+            y = [x[1] for x in extreme_points]
+            plt.scatter(x, y, s=500)
+
         ax1.set_xticks(list(range(w)))
         ax1.set_yticks(list(range(h)))
         ax1.grid(which='both')
@@ -108,6 +113,6 @@ class DataGenerator(object):
         plt.xlim(0, w)
         plt.ylim(0, h)
         plt.figure(1)
-        #plt.show()
-        plt.pause(0.2)
-        plt.close()
+        plt.show()
+        #plt.pause(0.2)
+        #plt.close()
