@@ -30,12 +30,28 @@ class TestDataGenerator(unittest.TestCase):
         dg = DataGenerator()
         some_instance_visual = dg.gen_instance_visual(n, w, h)
         perfect_bin_configuration = sorted(some_instance_visual, key=lambda x: (x[2][1], x[2][0]))
+        print(perfect_bin_configuration)
         some_instance_np_array = dg._transform_instance_visual_to_np_array(some_instance_visual)
 
         solution_checker = SolutionChecker(n, h, w)
         self.assertEqual(
             solution_checker.get_reward(perfect_bin_configuration),
-            w * h
+            0
+        )
+
+
+    def test_check_imperfect_solution(self):
+        n = 20
+        w = 40
+        h = 40
+        dg = DataGenerator()
+        some_instance_visual = dg.gen_instance_visual(n, w, h)
+        some_instance_np_array = dg._transform_instance_visual_to_np_array(some_instance_visual)
+
+        solution_checker = SolutionChecker(n, h, w)
+        self.assertNotEqual(
+            solution_checker.get_reward(some_instance_np_array),
+            0
         )
 
     def test_bin_outside_border(self):

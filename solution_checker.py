@@ -21,15 +21,18 @@ class SolutionChecker(object):
 
     def get_reward(self, bins):
         '''
-        perfect reward is w * h - 0
+        perfect reward is 0 area wasted
         '''
-        reward = self.w * self.h
-        for _bin in bins:
+        reward = 0
+        for i, _bin in enumerate(bins):
             next_lfb = self.get_next_lfb()
-            placed = self.place_element_on_grid(_bin, next_lfb)
+            #print(next_lfb, _bin)
+            placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
             if not placed:
-                reward -= 1
-            # self.visualize_grid()
+                print(f'could not place bin {_bin} on {next_lfb}')
+                reward += (_bin[0] + _bin[1])
+            #print(next_lfb, _bin)
+            #self.visualize_grid()
         return reward
 
 
@@ -39,18 +42,24 @@ class SolutionChecker(object):
         for i, _ in enumerate(self.grid):
             for j, _val in enumerate(self.grid[i]):
                 if self.grid[i][j] == 0:
-                    return (i, j)
+                    return (j, i)
         return lfb
 
-    def place_element_on_grid(self, _bin, position):
-        print(_bin, position)
+    def place_element_on_grid(self, _bin, position, val):
+        if position[0] + _bin[0] > self.w:
+            print(f'{position[0] + _bin[0]} bigger than width')
+            return False
+        if position[1] + _bin[1] > self.h:
+            print(f'{position[1] + _bin[1]} bigger than height')
+            return False
+
         for i in range(_bin[1]):
             for j in range(_bin[0]):
-                row = self.grid[position[0] + i]
-                if row[position[1] + j] == 1:
-                    print('position already taken')
+                row = self.grid[position[1] + i]
+                if row[position[0] + j] != 0:
+                    print(f'position ({position[1] + i} {position[0] + j}) already taken')
                     return False
-                row[position[1] + j] = 1
+                row[position[0] + j] = val
 
         return True
 
