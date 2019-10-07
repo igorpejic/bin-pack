@@ -40,9 +40,11 @@ class SolutionChecker(object):
 
                 if left_point[1] == self.h:  # reached the ceiling
                     print('reached the ceiling')
-                    # self.LFBs.add(low_right_point)
-                    # self.LFBs.add(high_right_point)
-                    lfbs_to_add.extend([low_right_point])
+                    if high_right_point[0] != self.w:
+                        lfbs_to_add.extend([low_right_point])
+                elif high_right_point[0] == self.w:
+                    lfbs_to_add.extend([left_point])
+
                 else:
                     lfbs_to_add.extend([left_point, low_right_point, high_right_point])
                     #self.LFBs.add(left_point)
@@ -63,8 +65,16 @@ class SolutionChecker(object):
                         overlaps or left_edge_equal or right_edge_equal
                 ):
                     elements_to_remove.append(_lfb)
+
+                # the following removes parts on flat
+                # lfb is neighbor on right; we need to remove high_right_point
+                if high_right_point[1] == _lfb[1] and high_right_point[0] == _lfb[0]:
+                    lfbs_to_add.remove(high_right_point)
+
+                # lfb is neighbor on left
+                if high_right_point[1] == _lfb[1] and left_point[0] == _lfb[0]:
+                    lfbs_to_add.remove(left_point)
                 
-            print(elements_to_remove)
             for element in elements_to_remove:
                 self.LFBs.remove(element)
 
@@ -82,13 +92,17 @@ class SolutionChecker(object):
 
         closest_right = self._get_closest_right()
 
+        ret = False
         if left_border +  _bin[0] > closest_right:  # clashes with box on right or total box border
-            return True
+            ret = True
 
         if self.LFBs[0][1] + _bin[1] > self.h:  # taller than total box
-            return True
+            ret = True
 
-        return False
+        if ret:
+            print(f'bin {_bin} could not fit into {self.LFBs} (closest_right: {closest_right}')
+
+        return ret
 
 
     def _get_closest_right_point(self):
