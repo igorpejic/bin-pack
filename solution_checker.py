@@ -17,74 +17,119 @@ class SolutionChecker(object):
         self.h = h
         self.LFBs = SortedKeyList([], key=lambda x: (x[1], x[0]))
         self.LFBs.add((0, 0))
+        self.grid = [[0 for x in range(w)] for y in range(h)]
 
     def get_reward(self, bins):
         '''
         perfect reward is w * h - 0
         '''
         reward = self.w * self.h
-
-        bins_processed = []
         for _bin in bins:
-            lfbs_to_add = []
-            if self.is_bin_outside_borders(_bin):
-                # TODO
+            next_lfb = self.get_next_lfb()
+            placed = self.place_element_on_grid(_bin, next_lfb)
+            if not placed:
                 reward -= 1
-                print(_bin, self.LFBs, 'could not fill')
-            else:
-                old_lfb = self.LFBs[0]
-
-                left_point = old_lfb[0], old_lfb[1] + _bin[1]
-                low_right_point = old_lfb[0] + _bin[0], old_lfb[1]
-                high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
-
-                if left_point[1] == self.h:  # reached the ceiling
-                    print('reached the ceiling')
-                    if high_right_point[0] != self.w:
-                        lfbs_to_add.extend([low_right_point])
-                elif high_right_point[0] == self.w:
-                    lfbs_to_add.extend([left_point])
-
-                else:
-                    lfbs_to_add.extend([left_point, low_right_point, high_right_point])
-                    #self.LFBs.add(left_point)
-
-                    #self.LFBs.add(low_right_point)
-                    #self.LFBs.add(high_right_point)
-
-            # TODO: now check which lfbs points are covered by the new edge
-            elements_to_remove = []
-            for _lfb in self.LFBs:
-                if left_point[1] < _lfb[1]:  # if the new edge is not higher it does not cover it for sure
-                    continue
-
-                overlaps = left_point[0] < _lfb[0] and high_right_point[0] > _lfb[0]
-                left_edge_equal = left_point[0] == _lfb[0] and high_right_point[0] >= _lfb[0]
-                right_edge_equal = (left_point[0] < _lfb[0] and high_right_point[0] >= _lfb[0])
-                if (  # covering condition
-                        overlaps or left_edge_equal or right_edge_equal
-                ):
-                    elements_to_remove.append(_lfb)
-
-                # the following removes parts on flat
-                # lfb is neighbor on right; we need to remove high_right_point
-                if high_right_point[1] == _lfb[1] and high_right_point[0] == _lfb[0]:
-                    lfbs_to_add.remove(high_right_point)
-
-                # lfb is neighbor on left
-                if high_right_point[1] == _lfb[1] and left_point[0] == _lfb[0]:
-                    lfbs_to_add.remove(left_point)
-                
-            for element in elements_to_remove:
-                self.LFBs.remove(element)
-
-            for element in lfbs_to_add:
-                self.LFBs.add(element)
-
-            bins_processed.append(_bin)
-            DataGenerator().visualize_2D(bins_processed, self.w, self.h, extreme_points=self.LFBs)
-
+            # self.visualize_grid()
         return reward
+
+
+
+    def get_next_lfb(self):
+        lfb = None
+        for i, _ in enumerate(self.grid):
+            for j, _val in enumerate(self.grid[i]):
+                if self.grid[i][j] == 0:
+                    return (i, j)
+        return lfb
+
+    def place_element_on_grid(self, _bin, position):
+        print(_bin, position)
+        for i in range(_bin[1]):
+            for j in range(_bin[0]):
+                row = self.grid[position[0] + i]
+                if row[position[1] + j] == 1:
+                    print('position already taken')
+                    return False
+                row[position[1] + j] = 1
+
+        return True
+
+        
+
+
+
+
+    # def get_reward(self, bins):
+    #     '''
+    #     perfect reward is w * h - 0
+    #     '''
+    #     reward = self.w * self.h
+
+    #     bins_processed = []
+    #     for _bin in bins:
+    #         lfbs_to_add = []
+    #         if self.is_bin_outside_borders(_bin):
+    #             # TODO
+    #             reward -= 1
+    #             print(_bin, self.LFBs, 'could not fill')
+    #         else:
+    #             old_lfb = self.LFBs[0]
+
+    #             left_point = old_lfb[0], old_lfb[1] + _bin[1]
+    #             low_right_point = old_lfb[0] + _bin[0], old_lfb[1]
+    #             high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
+
+    #             if left_point[1] == self.h:  # reached the ceiling
+    #                 print('reached the ceiling')
+    #                 if high_right_point[0] != self.w:
+    #                     lfbs_to_add.extend([low_right_point])
+    #             elif high_right_point[0] == self.w:
+    #                 lfbs_to_add.extend([left_point])
+
+    #             else:
+    #                 lfbs_to_add.extend([left_point, low_right_point, high_right_point])
+    #                 #self.LFBs.add(left_point)
+
+    #                 #self.LFBs.add(low_right_point)
+    #                 #self.LFBs.add(high_right_point)
+
+    #         # TODO: now check which lfbs points are covered by the new edge
+    #         elements_to_remove = []
+    #         for _lfb in self.LFBs:
+
+    #             overlaps = left_point[0] < _lfb[0] and high_right_point[0] > _lfb[0]
+    #             left_edge_equal = left_point[0] == _lfb[0] and high_right_point[0] >= _lfb[0]
+    #             right_edge_equal = (left_point[0] < _lfb[0] and high_right_point[0] >= _lfb[0])
+    #             if (  # covering condition
+    #                     overlaps or left_edge_equal or right_edge_equal
+    #             ):
+    #                 elements_to_remove.append(_lfb)
+    #             print(overlaps, left_edge_equal, right_edge_equal, _lfb)
+
+    #             # the following removes parts on flat
+    #             # lfb is neighbor on right; we need to remove high_right_point
+    #             if high_right_point[1] == _lfb[1] and high_right_point[0] == _lfb[0]:
+    #                 if high_right_point in lfbs_to_add:
+    #                     lfbs_to_add.remove(high_right_point)
+    #                     elements_to_remove(high_right_point)
+
+    #             # lfb is neighbor on left
+    #             if high_right_point[1] == _lfb[1] and left_point[0] == _lfb[0]:
+    #                 if left_point in lfbs_to_add:
+    #                     lfbs_to_add.remove(left_point)
+    #                     elements_to_remove(left_point)
+    #             
+    #         for element in elements_to_remove:
+    #             if element in self.LFBs:
+    #                 self.LFBs.remove(element)
+
+    #         for element in lfbs_to_add:
+    #             self.LFBs.add(element)
+
+    #         bins_processed.append(_bin)
+    #         DataGenerator().visualize_2D(bins_processed, self.w, self.h, extreme_points=self.LFBs)
+
+    #     return reward
 
     def is_bin_outside_borders(self, _bin):
         position_to_put_bin_into = self.LFBs[0]
@@ -120,7 +165,7 @@ class SolutionChecker(object):
         return self._get_closest_right_point()[0]
 
 
-    def visualize_extreme_points(self):
+    def visualize_grid(self):
 
         import matplotlib
         matplotlib.use('GTK')
@@ -130,11 +175,7 @@ class SolutionChecker(object):
         ax1 = fig1.add_subplot(111, aspect='equal')
         ax1.set_xticks(list(range(self.w)))
         ax1.set_yticks(list(range(self.h)))
-        ax1.grid(which='both')
-        x = [x[0] for x in self.LFBs]
-        y = [x[1] for x in self.LFBs]
-        plt.scatter(x, y)
-
+        ax1.imshow(self.grid)
         plt.xlim(0, self.w)
         plt.ylim(0, self.h)
         plt.figure(1)
