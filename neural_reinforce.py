@@ -35,6 +35,7 @@ import math
 from sklearn.decomposition import PCA
 
 from data_generator import DataGenerator
+from solution_checker import SolutionChecker
 distr = tf.contrib.distributions
 
 from tqdm import tqdm
@@ -337,7 +338,9 @@ class Actor(object):
         print(ordered_y_.shape)
 
         # TODO: check reward here using solution_checker
-        raise False
+        solution_checker = SolutionChecker(n, w, h)
+        sess = tf.Session()
+        solution_checker.get_reward(self.ordered_input_.eval(session=sess))
         
         # here we need to check if the first x configurations constructed a valid first row LBF
 
