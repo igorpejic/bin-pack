@@ -45,11 +45,10 @@ class SolutionChecker(object):
             #print(next_lfb, _bin)
             placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
             if not placed:
-                print(f'could not place bin {_bin} on {next_lfb}')
+                # print(f'could not place bin {_bin} on {next_lfb}')
                 reward += (_bin[0] + _bin[1])
             #print(next_lfb, _bin)
             #self.visualize_grid()
-            print('generated reward {}'.format(reward))
         return reward
 
 
@@ -63,19 +62,18 @@ class SolutionChecker(object):
         return lfb
 
     def place_element_on_grid(self, _bin, position, val):
-        print(position, _bin)
         if position[0] + _bin[0] > self.w:
-            print(f'{position[0] + _bin[0]} bigger than width')
+            # print(f'{position[0] + _bin[0]} bigger than width')
             return False
         if position[1] + _bin[1] > self.h:
-            print(f'{position[1] + _bin[1]} bigger than height')
+            # print(f'{position[1] + _bin[1]} bigger than height')
             return False
 
         for i in range(int(_bin[1])):
             for j in range(int(_bin[0])):
                 row = self.grid[position[1] + i]
                 if row[position[0] + j] != 0:
-                    print(f'position ({position[1] + i} {position[0] + j}) already taken')
+                    # print(f'position ({position[1] + i} {position[0] + j}) already taken')
                     return False
                 row[position[0] + j] = val
 
