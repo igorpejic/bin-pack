@@ -10,17 +10,24 @@ from sortedcontainers import SortedKeyList
 
 class SolutionChecker(object):
 
+
     def __init__(self, n, w, h):
         self.n = n
         self.w = w
         self.h = h
         self.LFBs = SortedKeyList([], key=lambda x: (x[1], x[0]))
         self.LFBs.add((0, 0))
-        self.grid = [[0 for x in range(w)] for y in range(h)]
+        self.grid = self.initialize_grid()
+
+
+    def initialize_grid(self):
+        return [[0 for x in range(self.w)] for y in range(self.h)]
+
 
     def get_rewards(self, batch_bins):
         batch_rewards = []
         for  _bin in batch_bins:
+            self.grid = self.initialize_grid()
             batch_rewards.append(self.get_reward(_bin))
         return np.mean(batch_rewards).astype(np.float32)
 
@@ -42,6 +49,7 @@ class SolutionChecker(object):
                 reward += (_bin[0] + _bin[1])
             #print(next_lfb, _bin)
             #self.visualize_grid()
+            print('generated reward {}'.format(reward))
         return reward
 
 
