@@ -1,5 +1,4 @@
 import numpy as np
-import numpy as np
 import matplotlib.pyplot as plt
 import math
 import bisect
@@ -19,13 +18,23 @@ class SolutionChecker(object):
         self.LFBs.add((0, 0))
         self.grid = [[0 for x in range(w)] for y in range(h)]
 
+    def get_rewards(self, batch_bins):
+        batch_rewards = []
+        for  _bin in batch_bins:
+            batch_rewards.append(self.get_reward(_bin))
+        return np.mean(batch_rewards).astype(np.float32)
+
     def get_reward(self, bins):
         '''
         perfect reward is 0 area wasted
         '''
+
         reward = 0
+        bins = bins[:-1]
         for i, _bin in enumerate(bins):
             next_lfb = self.get_next_lfb()
+            if not next_lfb:
+                return reward
             #print(next_lfb, _bin)
             placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
             if not placed:
@@ -46,6 +55,7 @@ class SolutionChecker(object):
         return lfb
 
     def place_element_on_grid(self, _bin, position, val):
+        print(position, _bin)
         if position[0] + _bin[0] > self.w:
             print(f'{position[0] + _bin[0]} bigger than width')
             return False
@@ -53,8 +63,8 @@ class SolutionChecker(object):
             print(f'{position[1] + _bin[1]} bigger than height')
             return False
 
-        for i in range(_bin[1]):
-            for j in range(_bin[0]):
+        for i in range(int(_bin[1])):
+            for j in range(int(_bin[0])):
                 row = self.grid[position[1] + i]
                 if row[position[0] + j] != 0:
                     print(f'position ({position[1] + i} {position[0] + j}) already taken')

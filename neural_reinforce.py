@@ -330,7 +330,7 @@ class Actor(object):
         else:
             self.ordered_input_ = tf.gather_nd(tf.tile(self.input_,[self.batch_size,1,1]),self.permutations)
 
-        self.ordered_input_ = tf.transpose(self.ordered_input_,[2,1,0]) # [features, seq length +1, batch_size]   Rq: +1 because end = start    
+        # self.ordered_input_ = tf.transpose(self.ordered_input_,[2,1,0]) # [features, seq length +1, batch_size]   Rq: +1 because end = start    
         
         ordered_x_ = self.ordered_input_[0] # ordered x, y coordinates [seq length +1, batch_size]
         print(ordered_x_.shape)
@@ -340,19 +340,10 @@ class Actor(object):
         # TODO: check reward here using solution_checker
         solution_checker = SolutionChecker(n, w, h)
         sess = tf.Session()
-        solution_checker.get_reward(self.ordered_input_.eval(session=sess))
+        rewards = tf.compat.v1.py_func(solution_checker.get_rewards, [self.ordered_input_], tf.float32)
         
-        # here we need to check if the first x configurations constructed a valid first row LBF
-
-        # we go row by row in LBF keeping track of lowest height 
-
-        delta_x2 = tf.transpose(tf.square(ordered_x_[1:]-ordered_x_[:-1]),[1,0]) # [batch_size, seq length]        delta_x**2
-        delta_y2 = tf.transpose(tf.square(ordered_y_[1:]-ordered_y_[:-1]),[1,0]) # [batch_size, seq length]        delta_y**2
-
-        inter_city_distances = tf.sqrt(delta_x2+delta_y2) # sqrt(delta_x**2 + delta_y**2) this is the euclidean distance between each city: depot --> ... ---> depot      [batch_size, seq length]
-        self.distances = tf.reduce_sum(inter_city_distances, axis=1) # [batch_size]
-        self.reward = tf.cast(self.distances,tf.float32) # define reward from tour length  
-        tf.summary.scalar('reward_mean', tf.reduce_mean(self.reward))
+        self.reward = rewards
+        tf.summary.scalar('reward_mean', tf.reduce_mean(rewards))
 
             
     def build_critic(self):
