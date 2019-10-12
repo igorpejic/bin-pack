@@ -218,6 +218,7 @@ train_arg.add_argument('--lr_start', type=float, default=0.001, help='actor lear
 train_arg.add_argument('--lr_decay_step', type=int, default=5000, help='lr1 decay step')
 train_arg.add_argument('--lr_decay_rate', type=float, default=0.96, help='lr1 decay rate')
 train_arg.add_argument('--temperature', type=float, default=1.0, help='pointer initial temperature')
+train_arg.add_argument('--freeze_first_batch', action='store_true', help='freeze the first random batch and reuse it')
 train_arg.add_argument('--C', type=float, default=10.0, help='pointer tanh clipping')
 train_arg.add_argument('--is_training', type=str2bool, default=True, help='switch to inference mode when model is trained') 
 
@@ -330,17 +331,10 @@ class Actor(object):
         else:
             self.ordered_input_ = tf.gather_nd(tf.tile(self.input_,[self.batch_size,1,1]),self.permutations)
 
-        # self.ordered_input_ = tf.transpose(self.ordered_input_,[2,1,0]) # [features, seq length +1, batch_size]   Rq: +1 because end = start    
-        
-        ordered_x_ = self.ordered_input_[0] # ordered x, y coordinates [seq length +1, batch_size]
-        print(ordered_x_.shape)
-        ordered_y_ = self.ordered_input_[1] # ordered y coordinates [seq length +1, batch_size]          
-        print(ordered_y_.shape)
-
-        # TODO: check reward here using solution_checker
         solution_checker = SolutionChecker(n, w, h)
         sess = tf.Session()
-        rewards = tf.compat.v1.py_func(solution_checker.get_rewards, [self.ordered_input_], tf.float32)
+        rewards = tf.compat.v1.py_func(
+            solution_checker.get_rewards, [self.ordered_input_], tf.float32)
         
         self.reward = rewards
         tf.summary.scalar('reward_mean', tf.reduce_mean(rewards))
@@ -406,7 +400,10 @@ with tf.Session() as sess: # start session
     writer = tf.summary.FileWriter('summary/'+dir_, sess.graph) # summary writer
     
     for i in tqdm(range(config.nb_steps)): # Forward pass & train step
-        input_batch = dataset.train_batch(actor.batch_size, actor.n, actor.w, actor.h, actor.dimension)
+        input_batch = dataset.train_batch(
+            actor.batch_size, actor.n, actor.w, actor.h, actor.dimension,
+            freeze_first_batch=config.freeze_first_batch
+        )
         feed = {actor.input_: input_batch} # get feed dict
         reward, predictions, summary, _, _ = sess.run([actor.reward, actor.predictions, actor.merged, actor.trn_op1, actor.trn_op2], feed_dict=feed)
 

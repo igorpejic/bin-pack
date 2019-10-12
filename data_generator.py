@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 class DataGenerator(object):
 
     def __init__(self):
-        pass
+        self.frozen_first_batch = None
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
         if seed!=0:
@@ -56,11 +56,18 @@ class DataGenerator(object):
             ret = [ [_bin[0], value, _bin[2]], [_bin[0], _bin[1] - value, (_bin[2][0], _bin[2][1] + value)] ] 
         return ret
 
-    def train_batch(self, batch_size, n, w, h, dimensions=2, seed=0):
+    def train_batch(self, batch_size, n, w, h, dimensions=2, seed=0, freeze_first_batch=False):
         input_batch = []
+        if freeze_first_batch and self.frozen_first_batch:
+            return self.frozen_first_batch
         for _ in range(batch_size):
             input_ = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
             input_batch.append(input_)
+
+        if freeze_first_batch:
+            if not self.frozen_first_batch:
+                self.frozen_first_batch = input_batch
+                print('Using frozen batch', self.frozen_first_batch)
         return input_batch
 
 

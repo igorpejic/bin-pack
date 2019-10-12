@@ -26,10 +26,12 @@ class SolutionChecker(object):
 
     def get_rewards(self, batch_bins):
         batch_rewards = []
+        # print(batch_bins)
         for  _bin in batch_bins:
             self.grid = self.initialize_grid()
             batch_rewards.append(self.get_reward(_bin))
-        return np.mean(batch_rewards).astype(np.float32)
+        # return np.mean(batch_rewards).astype(np.float32)
+        return np.array(batch_rewards).astype(np.float32)
 
     def get_reward(self, bins):
         '''
@@ -38,15 +40,20 @@ class SolutionChecker(object):
 
         reward = 0
         bins = bins[:-1]
+        has_not_been_able_to_place_bin = False
         for i, _bin in enumerate(bins):
+            if has_not_been_able_to_place_bin:
+                reward += (_bin[0] * _bin[1])
+
             next_lfb = self.get_next_lfb()
             if not next_lfb:
                 return reward
             #print(next_lfb, _bin)
             placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
             if not placed:
+                has_not_been_able_to_place_bin = True
                 # print(f'could not place bin {_bin} on {next_lfb}')
-                reward += (_bin[0] + _bin[1])
+                reward += (_bin[0] * _bin[1])
             #print(next_lfb, _bin)
             #self.visualize_grid()
         return reward
