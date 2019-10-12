@@ -174,7 +174,7 @@ n = 20
 w = 50
 h = 50
 
-input_batch = dataset.test_batch(batch_size=128, n=n, w=w, h=h, dimensions=2, seed=123) # Generate some data
+# input_batch = dataset.test_batch(batch_size=128, n=n, w=w, h=h, dimensions=2, seed=123) # Generate some data
 # dataset.visualize_2D_trip(input_batch[0]) # 2D plot for coord batch
 
 """## 2. Config"""
@@ -422,7 +422,6 @@ with tf.Session() as sess: # start session
 
 config.is_training = False
 config.batch_size = 10 ##### #####
-config.n_bins = 20 ##### #####
 config.temperature = 1.2 ##### #####
 
 tf.reset_default_graph()
