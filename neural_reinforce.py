@@ -333,7 +333,7 @@ class Actor(object):
 
         solution_checker = SolutionChecker(n, w, h)
         sess = tf.Session()
-        rewards = tf.compat.v1.py_func(
+        rewards = tf.py_func(
             solution_checker.get_rewards, [self.ordered_input_], tf.float32)
         
         self.reward = rewards
