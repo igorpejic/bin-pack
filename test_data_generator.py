@@ -98,7 +98,7 @@ class TestDataGenerator(unittest.TestCase):
 
         state = np.copy(matrix[0])
 
-        state = DataGenerator.add_tile_to_state(state, [4, 5], (2, 2))
+        state = DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([4, 5], w, h), (2, 2))
 
         # first tile different orientation
         self.assertEqual(state[0][0] , 1)
@@ -139,7 +139,7 @@ class TestDataGenerator(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            lambda: DataGenerator.add_tile_to_state(state, [1, 3], (38, 2))
+            lambda: DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([1, 3], w, h), (38, 2))
             )
 
     def test_add_tile_to_state_raises_error(self):
@@ -153,7 +153,7 @@ class TestDataGenerator(unittest.TestCase):
 
         self.assertRaises(
             ValueError,
-            lambda: DataGenerator.add_tile_to_state(state, [4, 5], (1, 2)))
+            lambda: DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([4, 5], w, h), (1, 2)))
 
     def test_split_bin(self):
         dg = DataGenerator()

@@ -52,6 +52,16 @@ class DataGenerator(object):
         return self._transform_instance_to_matrix(self.gen_instance(
             n, w, h, dimensions=dimensions, seed=seed))
 
+    @staticmethod
+    def tile_to_matrix(tile, w, h):
+        _slice = np.zeros([h, w])
+        for i in range(tile[0]):
+            for j in range(tile[1]):
+                _slice[i][j] = 1
+        return _slice
+
+
+
     def _transform_instance_to_matrix(self, tiles):
         """
         transforms list of bins:
@@ -70,13 +80,10 @@ class DataGenerator(object):
         all_slices = None
         for tile in tiles:
             for orientation in range(ORIENTATIONS):
-                _slice = np.zeros([h, w])
-                for i in range(tile[0]):
-                    for j in range(tile[1]):
-                        if orientation == 0:
-                            _slice[i][j] = 1
-                        else:
-                            _slice[j][i] = 1
+                if orientation == 0:
+                    _slice = self.tile_to_matrix(tile, w, h)
+                else:
+                    _slice = self.tile_to_matrix((tile[1], tile[0]), w, h)
                 if all_slices is not None:
                     _slice = np.reshape(_slice, (1, _slice.shape[0], _slice.shape[1]))
                     all_slices = np.concatenate((all_slices, _slice), axis=0)
@@ -106,7 +113,7 @@ class DataGenerator(object):
     @staticmethod
     def add_tile_to_state(state, tile, position):
         new_state = np.copy(state)
-        tile_w, tile_h = tile
+        tile_w, tile_h = DataGenerator.get_matrix_tile_dims(tile)
         for j in range(tile_w):
             for i in range(tile_h):
                 if position[0] + i > state.shape[0]:
