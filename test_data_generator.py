@@ -45,7 +45,6 @@ class TestDataGenerator(unittest.TestCase):
         self.assertEqual(matrix[0].shape , (h, w))
         ORIENTATIONS = 2
         self.assertEqual(matrix.shape , (len(tiles) * ORIENTATIONS, h, w))
-        print(matrix)
 
         # first tile different orientation
         self.assertEqual(matrix[0][0][0] , 1)
@@ -73,7 +72,88 @@ class TestDataGenerator(unittest.TestCase):
         self.assertEqual(matrix[1][0][3] , 0)
 
 
+    def test_get_matrix_tile_dims(self):
+        w = 40
+        h = 30
+        dg = DataGenerator(w, h)
+        tiles = np.array([[2, 3], [4, 5]])
+        matrix = dg._transform_instance_to_matrix(tiles)
 
+        self.assertEqual(matrix[0].shape , (h, w))
+        ORIENTATIONS = 2
+        self.assertEqual(matrix.shape , (len(tiles) * ORIENTATIONS, h, w))
+
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[0]), (2, 3))
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[1]), (3, 2))
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[2]), (4, 5))
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[3]), (5, 4))
+
+
+    def test_add_tile_to_state(self):
+        w = 40
+        h = 30
+        dg = DataGenerator(w, h)
+        tiles = np.array([[2, 3], [4, 5]])
+        matrix = dg._transform_instance_to_matrix(tiles)
+
+        state = np.copy(matrix[0])
+
+        state = DataGenerator.add_tile_to_state(state, [4, 5], (2, 2))
+
+        # first tile different orientation
+        self.assertEqual(state[0][0] , 1)
+        self.assertEqual(state[0][1] , 1)
+        self.assertEqual(state[0][2] , 1)
+        self.assertEqual(state[1][0] , 1)
+        self.assertEqual(state[1][1] , 1)
+        self.assertEqual(state[1][2] , 1)
+
+        self.assertEqual(state[2][0] , 0)
+        self.assertEqual(state[2][1] , 0)
+
+        self.assertEqual(state[2][2] , 1)
+        self.assertEqual(state[2][3] , 1)
+        self.assertEqual(state[2][4] , 1)
+        self.assertEqual(state[2][5] , 1)
+        self.assertEqual(state[2][6] , 0)
+
+        self.assertEqual(state[2][2] , 1)
+        self.assertEqual(state[3][2] , 1)
+        self.assertEqual(state[4][2] , 1)
+        self.assertEqual(state[5][2] , 1)
+        self.assertEqual(state[6][2] , 1)
+        self.assertEqual(state[7][2] , 0)
+
+        self.assertEqual(state[6][5] , 1)
+        self.assertEqual(state[6][6] , 0)
+        self.assertEqual(state[7][6] , 0)
+
+    def test_add_tile_out_of_bounds_raises_error(self):
+        w = 40
+        h = 30
+        dg = DataGenerator(w, h)
+        tiles = np.array([[2, 3], [4, 5]])
+        matrix = dg._transform_instance_to_matrix(tiles)
+
+        state = np.copy(matrix[0])
+
+        self.assertRaises(
+            ValueError,
+            lambda: DataGenerator.add_tile_to_state(state, [1, 3], (38, 2))
+            )
+
+    def test_add_tile_to_state_raises_error(self):
+        w = 40
+        h = 30
+        dg = DataGenerator(w, h)
+        tiles = np.array([[2, 3], [4, 5]])
+        matrix = dg._transform_instance_to_matrix(tiles)
+
+        state = np.copy(matrix[0])
+
+        self.assertRaises(
+            ValueError,
+            lambda: DataGenerator.add_tile_to_state(state, [4, 5], (1, 2)))
 
     def test_split_bin(self):
         dg = DataGenerator()

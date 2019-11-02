@@ -48,8 +48,9 @@ class DataGenerator(object):
         bins = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
         return np.array(bins)
 
-    def get_matrix_instance(self, bins, dimensions=2):
-        return _transform_instance_to_matrix(self.gen_instance(bins, dimensions))
+    def gen_matrix_instance(self, n, w, h, dimensions=2, seed=0):
+        return self._transform_instance_to_matrix(self.gen_instance(
+            n, w, h, dimensions=dimensions, seed=seed))
 
     def _transform_instance_to_matrix(self, tiles):
         """
@@ -84,7 +85,41 @@ class DataGenerator(object):
                     all_slices = np.reshape(all_slices, (1, _slice.shape[0], _slice.shape[1]))
 
         return all_slices
-    
+
+
+    @staticmethod
+    def get_matrix_tile_dims(tile):
+        height = 0
+        width = 0
+        i = 0
+        while tile[0][i] == 1: 
+            height += 1
+            i += 1
+
+        i = 0
+        while tile[i][0] == 1: 
+            width += 1
+            i += 1
+
+        return (width, height)
+
+    @staticmethod
+    def add_tile_to_state(state, tile, position):
+        new_state = np.copy(state)
+        tile_w, tile_h = tile
+        for j in range(tile_w):
+            for i in range(tile_h):
+                if position[0] + i > state.shape[0]:
+                    raise ValueError('tile goes out of bin height')
+                if position[1] + j > state.shape[1]:
+                    raise ValueError('tile goes out of bin width')
+
+                if new_state[position[0] + i ][position[1] + j] == 1:
+                    raise ValueError('locus already taken')
+                else:
+                    new_state[position[0] + i ][position[1] + j] = 1
+
+        return new_state
 
     def _split_bin(self, _bin, axis, value):
         assert len(_bin) == 3
