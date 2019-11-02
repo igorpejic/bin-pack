@@ -8,12 +8,17 @@ import matplotlib.pyplot as plt
 import math
 from sklearn.decomposition import PCA
 
+ORIENTATIONS = 2
 class DataGenerator(object):
 
-    def __init__(self):
+    def __init__(self, w=None, h=None):
+        self.w = w
+        self.h = h
         self.frozen_first_batch = None
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
+        self.w = w
+        self.h = h
         if seed!=0:
             np.random.seed(seed)
         bins = [[w, h, (0, 0)]]
@@ -42,6 +47,43 @@ class DataGenerator(object):
     def gen_instance(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
         bins = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
         return np.array(bins)
+
+    def get_matrix_instance(self, bins, dimensions=2):
+        return _transform_instance_to_matrix(self.gen_instance(bins, dimensions))
+
+    def _transform_instance_to_matrix(self, tiles):
+        """
+        transforms list of bins:
+        [[2, 3], [4, 5]]
+        to stacks of bins with 2 orientations in left bottom corner
+        of size (w, h):
+        0000000000000
+        0000000000000
+        1100000000000
+        1100000000000
+        1100000000000
+        """
+        h = self.h
+        w = self.w
+
+        all_slices = None
+        for tile in tiles:
+            for orientation in range(ORIENTATIONS):
+                _slice = np.zeros([h, w])
+                for i in range(tile[0]):
+                    for j in range(tile[1]):
+                        if orientation == 0:
+                            _slice[i][j] = 1
+                        else:
+                            _slice[j][i] = 1
+                if all_slices is not None:
+                    _slice = np.reshape(_slice, (1, _slice.shape[0], _slice.shape[1]))
+                    all_slices = np.concatenate((all_slices, _slice), axis=0)
+                else:
+                    all_slices = _slice
+                    all_slices = np.reshape(all_slices, (1, _slice.shape[0], _slice.shape[1]))
+
+        return all_slices
     
 
     def _split_bin(self, _bin, axis, value):

@@ -137,33 +137,6 @@ def full_glimpse(ref, from_, to_, initializer=tf.contrib.layers.xavier_initializ
         return glimpse
 
 
-# Compute a sequence's reward
-def reward(tsp_sequence):
-    tour = np.concatenate((tsp_sequence, np.expand_dims(tsp_sequence[0],0))) # sequence to tour (end=start)
-    inter_city_distances = np.sqrt(np.sum(np.square(tour[:-1,:2]-tour[1:,:2]),axis=1)) # tour length
-    return np.sum(inter_city_distances) # reward
-
-# Swap city[i] with city[j] in sequence
-def swap2opt(tsp_sequence,i,j):
-    new_tsp_sequence = np.copy(tsp_sequence)
-    new_tsp_sequence[i:j+1] = np.flip(tsp_sequence[i:j+1], axis=0) # flip or swap ?
-    return new_tsp_sequence
-
-# One step of 2opt = one double loop and return first improved sequence
-def step2opt(tsp_sequence):
-    seq_length = tsp_sequence.shape[0]
-    distance = reward(tsp_sequence)
-    for i in range(1,seq_length-1):
-        for j in range(i+1,seq_length):
-            new_tsp_sequence = swap2opt(tsp_sequence,i,j)
-            new_distance = reward(new_tsp_sequence)
-            if new_distance < distance:
-                return new_tsp_sequence, new_distance
-    return tsp_sequence, distance
-
-
-#-*- coding: utf-8 -*-
-
 #from utils import embed_seq, encode_seq, full_glimpse, pointer
 
 """## 1. Data Generator"""
