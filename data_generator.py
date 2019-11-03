@@ -96,35 +96,78 @@ class DataGenerator(object):
 
     @staticmethod
     def get_matrix_tile_dims(tile):
+        matrix_w, matrix_h = tile.shape
         height = 0
         width = 0
         i = 0
         while tile[0][i] == 1: 
             height += 1
             i += 1
+            if i >= matrix_h:
+                break
 
         i = 0
         while tile[i][0] == 1: 
             width += 1
             i += 1
+            if i >= matrix_w:
+                break
 
         return (width, height)
+
+    @staticmethod
+    def get_valid_moves_mask(state, tiles):
+        """
+        state - 2d matrix representing current tile state
+        tiles - list of 2 matrices with same size as state each presenting one orientation
+        """
+        height = state.shape[0]
+        width = state.shape[1]
+
+        for i, tile in enumerate(tiles):
+            mask = state == 0
+            for row in range(height):
+                for col in range(width):
+                    # no need to check this one as position is already taken
+                    if mask[row][col] == False: 
+                        continue
+
+                    # checks if it clashes with already existing tiles
+                    try:
+                        DataGenerator.add_tile_to_state(
+                            state, tile, (row, col))
+                    except ValueError:
+                        mask[row][col] = False
+
+            if i == 0:
+                first_mask = np.copy(mask)
+            else:
+                second_mask = np.copy(mask)
+
+        final_mask = np.concatenate((first_mask, second_mask), axis=0)
+        return final_mask
+
+    @staticmethod
+    def position_index_to_row_col(position, width, height):
+        return (position // width, position % width)
 
     @staticmethod
     def add_tile_to_state(state, tile, position):
         new_state = np.copy(state)
         tile_w, tile_h = DataGenerator.get_matrix_tile_dims(tile)
-        for j in range(tile_w):
-            for i in range(tile_h):
-                if position[0] + i > state.shape[0]:
-                    raise ValueError('tile goes out of bin height')
-                if position[1] + j > state.shape[1]:
-                    raise ValueError('tile goes out of bin width')
+        for col in range(tile_w):
+            for row in range(tile_h):
+                if position[0] + row >= state.shape[0]:
+                    raise ValueError(
+                        f'tile goes out of bin height {position}')
+                if position[1] + col >= state.shape[1]:
+                    raise ValueError(
+                        f'tile goes out of bin width {position}')
 
-                if new_state[position[0] + i ][position[1] + j] == 1:
+                if new_state[position[0] + row ][position[1] + col] == 1:
                     raise ValueError('locus already taken')
                 else:
-                    new_state[position[0] + i ][position[1] + j] = 1
+                    new_state[position[0] + row ][position[1] + col] = 1
 
         return new_state
 

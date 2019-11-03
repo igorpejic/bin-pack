@@ -155,6 +155,44 @@ class TestDataGenerator(unittest.TestCase):
             ValueError,
             lambda: DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([4, 5], w, h), (1, 2)))
 
+    def test_get_valid_moves_mask(self):
+        w = 8
+        h = 6
+        dg = DataGenerator(w, h)
+
+        #                  w  h    w  h
+        tiles = np.array([[2, 3], [4, 5]])
+        matrix = dg._transform_instance_to_matrix(tiles)
+
+        state = np.copy(matrix[0])
+        mask = DataGenerator.get_valid_moves_mask(state, [matrix[2], matrix[3]])
+
+        print(mask)
+
+        self.assertEqual(list(mask[0]), [False, False, False,  True,  True, False, False, False])
+        self.assertEqual(list(mask[1]), [False, False, False,  True,  True, False, False, False])
+        self.assertEqual(list(mask[2]), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[3]), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[4]), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[5]), [False, False, False, False, False, False, False, False])
+
+        self.assertEqual(list(mask[6] ), [False, False, False,  True, False, False, False, False])
+        self.assertEqual(list(mask[7] ), [False, False, False,  True, False, False, False, False])
+        self.assertEqual(list(mask[8] ), [True,  True,  True,   True, False, False, False, False])
+        self.assertEqual(list(mask[9] ), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[10]), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[11]), [False, False, False, False, False, False, False, False])
+
+
+    def test_position_index_to_row_col(self):
+        position_index = 7
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (1, 3))
+
+
+
     def test_split_bin(self):
         dg = DataGenerator()
         _bin = [21, 41, (0, 0)]
