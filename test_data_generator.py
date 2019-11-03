@@ -308,14 +308,76 @@ class TestDataGenerator(unittest.TestCase):
         self.assertEqual(list(new_stack[4][6]), [0, 0, 0, 0, 0, 0, 0, 0])
         self.assertEqual(list(new_stack[4][7]), [0, 0, 0, 0, 0, 0, 0, 0])
 
+    def test_get_n_tiles_placed(self):
+        w = 8
+        h = 8
+
+        dg = DataGenerator(w, h)
+        board = np.zeros([1, h, w])
+        tiles = np.array([[2, 3], [4, 5]])
+        tiles = dg._transform_instance_to_matrix(tiles)
+        stack = np.concatenate((board, tiles), axis=0)
+        self.assertEqual(DataGenerator.get_n_tiles_placed(stack), 0)
+
+        new_stack = DataGenerator.play_position(stack, 64)
+
+        self.assertEqual(DataGenerator.get_n_tiles_placed(new_stack), 1)
+        new_stack = DataGenerator.play_position(new_stack, 32)
+        self.assertEqual(DataGenerator.get_n_tiles_placed(new_stack), 2)
+
 
     def test_position_index_to_row_col(self):
+
+        """
+
+          | 0   1   2   3
+        --|---------------
+        0 | 0   1   2   3
+          |
+        1 | 4   5   6   7   
+          |
+        2 | 8   9  10  11
+          |
+        3 |12  13  14  15
+
+        """
+
+
         position_index = 7
         width = 4
         height = 3
 
         self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (1, 3))
 
+        position_index = 3
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (0, 3))
+
+        position_index = 0
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (0, 0))
+
+        position_index = 5
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (1, 1))
+
+        position_index = 4
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (1, 0))
+
+        position_index = 11
+        width = 4
+        height = 3
+
+        self.assertEqual(DataGenerator.position_index_to_row_col(position_index, width, height), (2, 3))
 
 
     def test_split_bin(self):

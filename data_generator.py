@@ -144,8 +144,8 @@ class DataGenerator(object):
         return final_mask
 
     @staticmethod
-    def position_index_to_row_col(position, width, height):
-        return (position // width, position % width)
+    def position_index_to_row_col(position, cols, rows):
+        return (position // cols, position % cols)
 
 
     @staticmethod
@@ -179,6 +179,21 @@ class DataGenerator(object):
         return new_stack
 
     @staticmethod
+    def get_n_tiles_placed(stack):
+        """
+        count how many tiles are placed
+        assumes that all placed tiles are matrices with all zeros
+        """
+        count = 0
+        for _slice in stack[1:]:
+            if not _slice.any():
+                count += 1
+        ORIENTATIONS = 2
+        print(count)
+        count = count / ORIENTATIONS
+        return count
+
+    @staticmethod
     def add_tile_to_state(state, tile, position):
         new_state = np.copy(state)
         tile_rows, tile_cols = DataGenerator.get_matrix_tile_dims(tile)
@@ -192,7 +207,12 @@ class DataGenerator(object):
                         f'tile goes out of bin width {position}')
 
                 if new_state[position[0] + row ][position[1] + col] == 1:
-                    raise ValueError('locus already taken')
+                    raise ValueError(
+                        f'locus already taken: '
+                        f'state: {state} tile: {tile}'
+                        f'position: {position}'
+
+                    )
                 else:
                     new_state[position[0] + row ][position[1] + col] = 1
 
