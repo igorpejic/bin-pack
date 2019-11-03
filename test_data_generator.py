@@ -73,60 +73,75 @@ class TestDataGenerator(unittest.TestCase):
 
 
     def test_get_matrix_tile_dims(self):
-        w = 40
-        h = 30
+        w = 8
+        h = 9
         dg = DataGenerator(w, h)
-        tiles = np.array([[2, 3], [4, 5]])
+        tile_1_rows = 2
+        tile_1_cols = 3
+
+
+        tiles = np.array([[tile_1_rows, tile_1_cols], [4, 5]])
         matrix = dg._transform_instance_to_matrix(tiles)
 
         self.assertEqual(matrix[0].shape , (h, w))
         ORIENTATIONS = 2
         self.assertEqual(matrix.shape , (len(tiles) * ORIENTATIONS, h, w))
 
-        self.assertEqual(dg.get_matrix_tile_dims(matrix[0]), (2, 3))
-        self.assertEqual(dg.get_matrix_tile_dims(matrix[1]), (3, 2))
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[0]), (tile_1_rows, tile_1_cols))
+        self.assertEqual(dg.get_matrix_tile_dims(matrix[1]), (tile_1_cols, tile_1_rows))
         self.assertEqual(dg.get_matrix_tile_dims(matrix[2]), (4, 5))
         self.assertEqual(dg.get_matrix_tile_dims(matrix[3]), (5, 4))
 
+    def test_tile_to_matrix(self):
+        tile = [2, 5]
+        w = 8
+        h = 9
+        res = DataGenerator.tile_to_matrix(tile, w, h)
+
+        self.assertEqual(list(res[0]), [1., 1., 1., 1., 1., 0., 0., 0.,])
+        self.assertEqual(list(res[1]), [1., 1., 1., 1., 1., 0., 0., 0.,])
+        self.assertEqual(list(res[2]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[3]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[4]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[5]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[6]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[7]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(res[8]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+
 
     def test_add_tile_to_state(self):
-        w = 40
-        h = 30
+        """
+        test that tile gets added to matrix at depth[0]
+        """
+        w = 8
+        h = 9
         dg = DataGenerator(w, h)
-        tiles = np.array([[2, 3], [4, 5]])
+        tiles = np.array([[2, 3], [2, 1]])
         matrix = dg._transform_instance_to_matrix(tiles)
 
         state = np.copy(matrix[0])
 
-        state = DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([4, 5], w, h), (2, 2))
+        self.assertEqual(list(state[0]), [1., 1., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[1]), [1., 1., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[2]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[3]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[4]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[5]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[6]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[7]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[8]), [0., 0., 0., 0., 0., 0., 0., 0.,])
 
-        # first tile different orientation
-        self.assertEqual(state[0][0] , 1)
-        self.assertEqual(state[0][1] , 1)
-        self.assertEqual(state[0][2] , 1)
-        self.assertEqual(state[1][0] , 1)
-        self.assertEqual(state[1][1] , 1)
-        self.assertEqual(state[1][2] , 1)
+        state = DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([2, 1], w, h), (2, 2))
 
-        self.assertEqual(state[2][0] , 0)
-        self.assertEqual(state[2][1] , 0)
-
-        self.assertEqual(state[2][2] , 1)
-        self.assertEqual(state[2][3] , 1)
-        self.assertEqual(state[2][4] , 1)
-        self.assertEqual(state[2][5] , 1)
-        self.assertEqual(state[2][6] , 0)
-
-        self.assertEqual(state[2][2] , 1)
-        self.assertEqual(state[3][2] , 1)
-        self.assertEqual(state[4][2] , 1)
-        self.assertEqual(state[5][2] , 1)
-        self.assertEqual(state[6][2] , 1)
-        self.assertEqual(state[7][2] , 0)
-
-        self.assertEqual(state[6][5] , 1)
-        self.assertEqual(state[6][6] , 0)
-        self.assertEqual(state[7][6] , 0)
+        self.assertEqual(list(state[0]), [1., 1., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[1]), [1., 1., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[2]), [0., 0., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[3]), [0., 0., 1., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[4]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[5]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[6]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[7]), [0., 0., 0., 0., 0., 0., 0., 0.,])
+        self.assertEqual(list(state[8]), [0., 0., 0., 0., 0., 0., 0., 0.,])
 
     def test_add_tile_out_of_bounds_raises_error(self):
         w = 40
@@ -160,28 +175,138 @@ class TestDataGenerator(unittest.TestCase):
         h = 6
         dg = DataGenerator(w, h)
 
-        #                  w  h    w  h
+        #             rows, cols  rows, cols
         tiles = np.array([[2, 3], [4, 5]])
         matrix = dg._transform_instance_to_matrix(tiles)
 
         state = np.copy(matrix[0])
         mask = DataGenerator.get_valid_moves_mask(state, [matrix[2], matrix[3]])
+        """
+        state is:
+          [[1. 1. 1. 0. 0. 0. 0. 0.]
+           [1. 1. 1. 0. 0. 0. 0. 0.]
+           [0. 0. 0. 0. 0. 0. 0. 0.]
+           [0. 0. 0. 0. 0. 0. 0. 0.]
+           [0. 0. 0. 0. 0. 0. 0. 0.]
+           [0. 0. 0. 0. 0. 0. 0. 0.]]
+        """
 
-        print(mask)
-
-        self.assertEqual(list(mask[0]), [False, False, False,  True,  True, False, False, False])
-        self.assertEqual(list(mask[1]), [False, False, False,  True,  True, False, False, False])
-        self.assertEqual(list(mask[2]), [False, False, False, False, False, False, False, False])
+        self.assertEqual(list(mask[0]), [False, False, False,  True, False, False, False, False])
+        self.assertEqual(list(mask[1]), [False, False, False,  True, False, False, False, False])
+        self.assertEqual(list(mask[2]), [True,   True,  True,  True, False, False, False, False])
         self.assertEqual(list(mask[3]), [False, False, False, False, False, False, False, False])
         self.assertEqual(list(mask[4]), [False, False, False, False, False, False, False, False])
         self.assertEqual(list(mask[5]), [False, False, False, False, False, False, False, False])
 
-        self.assertEqual(list(mask[6] ), [False, False, False,  True, False, False, False, False])
-        self.assertEqual(list(mask[7] ), [False, False, False,  True, False, False, False, False])
-        self.assertEqual(list(mask[8] ), [True,  True,  True,   True, False, False, False, False])
+        self.assertEqual(list(mask[6] ), [False, False, False,  True,  True, False, False, False])
+        self.assertEqual(list(mask[7] ), [False, False, False,  True,  True, False, False, False])
+        self.assertEqual(list(mask[8] ), [False, False, False, False, False, False, False, False])
         self.assertEqual(list(mask[9] ), [False, False, False, False, False, False, False, False])
         self.assertEqual(list(mask[10]), [False, False, False, False, False, False, False, False])
         self.assertEqual(list(mask[11]), [False, False, False, False, False, False, False, False])
+
+
+    def test_play_position(self):
+        w = 8
+        h = 8
+
+        dg = DataGenerator(w, h)
+        board = np.zeros([1, h, w])
+        tiles = np.array([[2, 3], [4, 5]])
+        tiles = dg._transform_instance_to_matrix(tiles)
+        stack = np.concatenate((board, tiles), axis=0)
+
+        self.assertEqual(list(stack[0][0]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][1]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][2]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[0][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(stack[1][0]), [1, 1, 1, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][1]), [1, 1, 1, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][2]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[1][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(stack[2][0]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][1]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][2]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[2][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(stack[3][0]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(stack[3][1]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(stack[3][2]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(stack[3][3]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(stack[3][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[3][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[3][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[3][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(stack[4][0]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][1]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][2]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][3]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][4]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(stack[4][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        new_stack = DataGenerator.play_position(stack, 64)
+
+        self.assertEqual(list(new_stack[0][0]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][1]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][2]), [1, 1, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[0][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(new_stack[1][0]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][1]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][2]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][3]), [1, 1, 1, 1, 1, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[1][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(new_stack[2][0]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][1]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][2]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][3]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][4]), [1, 1, 1, 1, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[2][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(new_stack[3][0]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][1]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][2]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[3][7]), [0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.assertEqual(list(new_stack[4][0]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][1]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][2]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][3]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][4]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][5]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][6]), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(list(new_stack[4][7]), [0, 0, 0, 0, 0, 0, 0, 0])
 
 
     def test_position_index_to_row_col(self):

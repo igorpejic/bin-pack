@@ -96,24 +96,20 @@ class DataGenerator(object):
 
     @staticmethod
     def get_matrix_tile_dims(tile):
-        matrix_w, matrix_h = tile.shape
-        height = 0
-        width = 0
-        i = 0
-        while tile[0][i] == 1: 
-            height += 1
-            i += 1
-            if i >= matrix_h:
+        matrix_rows, matrix_cols = tile.shape
+        rows = 0
+        cols = 0
+        while tile[0][cols] == 1: 
+            cols += 1
+            if cols >= matrix_cols:
                 break
 
-        i = 0
-        while tile[i][0] == 1: 
-            width += 1
-            i += 1
-            if i >= matrix_w:
+        while tile[rows][0] == 1: 
+            rows += 1
+            if rows >= matrix_rows:
                 break
 
-        return (width, height)
+        return (rows, cols)
 
     @staticmethod
     def get_valid_moves_mask(state, tiles):
@@ -121,13 +117,13 @@ class DataGenerator(object):
         state - 2d matrix representing current tile state
         tiles - list of 2 matrices with same size as state each presenting one orientation
         """
-        height = state.shape[0]
-        width = state.shape[1]
+        rows = state.shape[0]
+        cols = state.shape[1]
 
         for i, tile in enumerate(tiles):
             mask = state == 0
-            for row in range(height):
-                for col in range(width):
+            for row in range(rows):
+                for col in range(cols):
                     # no need to check this one as position is already taken
                     if mask[row][col] == False: 
                         continue
@@ -151,12 +147,43 @@ class DataGenerator(object):
     def position_index_to_row_col(position, width, height):
         return (position // width, position % width)
 
+
+    @staticmethod
+    def play_position(stack, position):
+        """
+        Given a stack and position, add a tile to stack[0],
+        and make tile and its rotation zeros,
+        and move them to back of stack bringing forward new ones
+        """
+        new_stack = np.copy(stack)
+        rows = new_stack.shape[1] 
+        cols = new_stack.shape[2] 
+
+        if position >= cols * rows:
+            tile = new_stack[2]
+        else:
+            tile = new_stack[1]
+
+        new_stack = np.delete(new_stack, 1, axis=0)
+        new_stack = np.delete(new_stack, 1, axis=0)
+
+        new_stack = np.concatenate((new_stack, np.zeros([1, rows, cols])), axis=0)
+        new_stack = np.concatenate((new_stack, np.zeros([1, rows, cols])), axis=0)
+
+        position = DataGenerator.position_index_to_row_col(
+            position - rows * cols, tile.shape[1], tile.shape[0]
+        )
+
+        new_stack[0] = DataGenerator.add_tile_to_state(
+            new_stack[0], tile, position)
+        return new_stack
+
     @staticmethod
     def add_tile_to_state(state, tile, position):
         new_state = np.copy(state)
-        tile_w, tile_h = DataGenerator.get_matrix_tile_dims(tile)
-        for col in range(tile_w):
-            for row in range(tile_h):
+        tile_rows, tile_cols = DataGenerator.get_matrix_tile_dims(tile)
+        for row in range(tile_rows):
+            for col in range(tile_cols):
                 if position[0] + row >= state.shape[0]:
                     raise ValueError(
                         f'tile goes out of bin height {position}')
