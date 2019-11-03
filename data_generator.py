@@ -161,6 +161,7 @@ class DataGenerator(object):
 
         if position >= cols * rows:
             tile = new_stack[2]
+            position = position - rows * cols
         else:
             tile = new_stack[1]
 
@@ -171,7 +172,7 @@ class DataGenerator(object):
         new_stack = np.concatenate((new_stack, np.zeros([1, rows, cols])), axis=0)
 
         position = DataGenerator.position_index_to_row_col(
-            position - rows * cols, tile.shape[1], tile.shape[0]
+            position, tile.shape[1], tile.shape[0]
         )
 
         new_stack[0] = DataGenerator.add_tile_to_state(
@@ -189,7 +190,6 @@ class DataGenerator(object):
             if not _slice.any():
                 count += 1
         ORIENTATIONS = 2
-        print(count)
         count = count / ORIENTATIONS
         return count
 
@@ -208,8 +208,8 @@ class DataGenerator(object):
 
                 if new_state[position[0] + row ][position[1] + col] == 1:
                     raise ValueError(
-                        f'locus already taken: '
-                        f'state: {state} tile: {tile}'
+                        f'locus already taken:\n'
+                        f'state:\n {state}\n tile:\n {tile}\n'
                         f'position: {position}'
 
                     )
