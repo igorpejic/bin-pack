@@ -149,7 +149,7 @@ class DataGenerator(object):
 
 
     @staticmethod
-    def play_position(stack, position):
+    def play_position(stack, position, tile_index=None, vis_state=None):
         """
         Given a stack and position, add a tile to stack[0],
         and make tile and its rotation zeros,
@@ -175,9 +175,11 @@ class DataGenerator(object):
             position, tile.shape[1], tile.shape[0]
         )
 
-        new_stack[0] = DataGenerator.add_tile_to_state(
-            new_stack[0], tile, position)
-        return new_stack
+        ret = DataGenerator.add_tile_to_state(
+            new_stack[0], tile, position, tile_index=tile_index, vis_state=vis_state)
+
+        new_stack[0] = ret[0]
+        return new_stack, ret[1]
 
     @staticmethod
     def get_n_tiles_placed(stack):
@@ -194,8 +196,12 @@ class DataGenerator(object):
         return count
 
     @staticmethod
-    def add_tile_to_state(state, tile, position):
+    def add_tile_to_state(state, tile, position, tile_index=0, vis_state=None):
         new_state = np.copy(state)
+        if vis_state is not None:
+            new_vis_state = np.copy(vis_state)
+        else:
+            new_vis_state = None
         tile_rows, tile_cols = DataGenerator.get_matrix_tile_dims(tile)
         for row in range(tile_rows):
             for col in range(tile_cols):
@@ -215,8 +221,10 @@ class DataGenerator(object):
                     )
                 else:
                     new_state[position[0] + row ][position[1] + col] = 1
+                    if vis_state is not None:
+                        new_vis_state[position[0] + row ][position[1] + col] = tile_index 
 
-        return new_state
+        return new_state, new_vis_state
 
     def _split_bin(self, _bin, axis, value):
         assert len(_bin) == 3
