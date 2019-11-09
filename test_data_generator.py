@@ -131,7 +131,7 @@ class TestDataGenerator(unittest.TestCase):
         self.assertEqual(list(state[7]), [0., 0., 0., 0., 0., 0., 0., 0.,])
         self.assertEqual(list(state[8]), [0., 0., 0., 0., 0., 0., 0., 0.,])
 
-        state = DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([2, 1], w, h), (2, 2))
+        state, vis = DataGenerator.add_tile_to_state(state, DataGenerator.tile_to_matrix([2, 1], w, h), (2, 2))
 
         self.assertEqual(list(state[0]), [1., 1., 1., 0., 0., 0., 0., 0.,])
         self.assertEqual(list(state[1]), [1., 1., 1., 0., 0., 0., 0., 0.,])
@@ -261,7 +261,7 @@ class TestDataGenerator(unittest.TestCase):
         self.assertEqual(list(stack[4][6]), [0, 0, 0, 0, 0, 0, 0, 0])
         self.assertEqual(list(stack[4][7]), [0, 0, 0, 0, 0, 0, 0, 0])
 
-        new_stack = DataGenerator.play_position(stack, 64)
+        new_stack, vis_new_stack = DataGenerator.play_position(stack, 64)
 
         self.assertEqual(list(new_stack[0][0]), [1, 1, 0, 0, 0, 0, 0, 0])
         self.assertEqual(list(new_stack[0][1]), [1, 1, 0, 0, 0, 0, 0, 0])
@@ -319,10 +319,10 @@ class TestDataGenerator(unittest.TestCase):
         stack = np.concatenate((board, tiles), axis=0)
         self.assertEqual(DataGenerator.get_n_tiles_placed(stack), 0)
 
-        new_stack = DataGenerator.play_position(stack, 64)
+        new_stack, vis = DataGenerator.play_position(stack, 64)
 
         self.assertEqual(DataGenerator.get_n_tiles_placed(new_stack), 1)
-        new_stack = DataGenerator.play_position(new_stack, 32)
+        new_stack, vis = DataGenerator.play_position(new_stack, 32)
         self.assertEqual(DataGenerator.get_n_tiles_placed(new_stack), 2)
 
 
@@ -407,3 +407,14 @@ class TestDataGenerator(unittest.TestCase):
         batch = dg.test_batch(10, n, 40, 40)
         self.assertEqual(len(batch), 10)
         self.assertEqual(len(batch[0]), n)
+
+    # def test_read_instances_from_csv(self):
+    #     instances = DataGenerator().read_instances()
+    #     assert False
+
+    def test_read_instances_string_from_csv(self):
+        bins = DataGenerator.x_y_str_to_bins_format(
+            '[{"X":6,"Y":5},{"X":6,"Y":3},{"X":6,"Y":1},{"X":5,"Y":2},{"X":3,"Y":2},{"X":2,"Y":1}]')
+
+        self.assertEqual(len(bins), 6)
+        self.assertEqual(bins[0], [6, 5, (0, 0)])

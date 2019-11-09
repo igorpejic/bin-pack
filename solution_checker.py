@@ -11,54 +11,59 @@ from sortedcontainers import SortedKeyList
 class SolutionChecker(object):
 
 
-    def __init__(self, n, w, h):
+    def __init__(self, n, cols, rows):
         self.n = n
-        self.w = w
-        self.h = h
+        self.cols = cols
+        self.rows = rows
         self.LFBs = SortedKeyList([], key=lambda x: (x[1], x[0]))
         self.LFBs.add((0, 0))
         self.grid = self.initialize_grid()
 
 
     def initialize_grid(self):
-        return [[0 for x in range(self.w)] for y in range(self.h)]
+        return [[0 for x in range(self.cols)] for y in range(self.rows)]
 
 
-    def get_rewards(self, batch_bins):
+    def get_rewards(self, batch_bins, count_tiles=False, combinatorial_reward=False):
         batch_rewards = []
         # print(batch_bins)
         for  _bin in batch_bins:
             self.grid = self.initialize_grid()
-            batch_rewards.append(self.get_reward(_bin))
+            batch_rewards.append(self.get_reward(_bin, count_tiles=count_tiles, combinatorial_reward=combinatorial_reward))
         # return np.mean(batch_rewards).astype(np.float32)
         return np.array(batch_rewards).astype(np.float32)
 
-    def get_reward(self, bins):
+    def get_reward(self, bins, count_tiles=False, combinatorial_reward=False):
         '''
         perfect reward is 0 area wasted
+        as_tiles_non_placed - reward is given by number of tiles non_placed from the total number of tiles
+        combinatorial_reward - if True it will stop after first bin is not placed
         '''
 
         reward = 0
         bins = bins[:-1]
-        has_not_been_able_to_place_bin = False
         for i, _bin in enumerate(bins):
-            if has_not_been_able_to_place_bin:
-                reward += (_bin[0] * _bin[1])
-
             next_lfb = self.get_next_lfb()
             if not next_lfb:
-                return reward
-            #print(next_lfb, _bin)
+                break
+
             placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
             if not placed:
-                has_not_been_able_to_place_bin = True
-                # print(f'could not place bin {_bin} on {next_lfb}')
-                reward += (_bin[0] * _bin[1])
-            #print(next_lfb, _bin)
-            #self.visualize_grid()
-        return reward
+                if combinatorial_reward:
+                    return 1
+                if count_tiles:
+                    reward += 1
+                else:
+                    reward += (_bin[0] * _bin[1])
 
-
+        # scale from 0 to 1
+        if reward == 0:
+            return 0
+        else:
+            if count_tiles:
+                return reward / self.n
+            else:
+                return reward / (self.cols * self.rows)
 
     def get_next_lfb(self):
         lfb = None
@@ -69,10 +74,10 @@ class SolutionChecker(object):
         return lfb
 
     def place_element_on_grid(self, _bin, position, val):
-        if position[0] + _bin[0] > self.w:
+        if position[0] + _bin[0] > self.cols:
             # print(f'{position[0] + _bin[0]} bigger than width')
             return False
-        if position[1] + _bin[1] > self.h:
+        if position[1] + _bin[1] > self.rows:
             # print(f'{position[1] + _bin[1]} bigger than height')
             return False
 
@@ -86,16 +91,11 @@ class SolutionChecker(object):
 
         return True
 
-        
-
-
-
-
     # def get_reward(self, bins):
     #     '''
     #     perfect reward is w * h - 0
     #     '''
-    #     reward = self.w * self.h
+    #     reward = self.w * self.rows
 
     #     bins_processed = []
     #     for _bin in bins:
@@ -111,7 +111,7 @@ class SolutionChecker(object):
     #             low_right_point = old_lfb[0] + _bin[0], old_lfb[1]
     #             high_right_point = old_lfb[0] + _bin[0], old_lfb[1] + _bin[1]
 
-    #             if left_point[1] == self.h:  # reached the ceiling
+    #             if left_point[1] == self.rows:  # reached the ceiling
     #                 print('reached the ceiling')
     #                 if high_right_point[0] != self.w:
     #                     lfbs_to_add.extend([low_right_point])
@@ -159,7 +159,7 @@ class SolutionChecker(object):
     #             self.LFBs.add(element)
 
     #         bins_processed.append(_bin)
-    #         DataGenerator().visualize_2D(bins_processed, self.w, self.h, extreme_points=self.LFBs)
+    #         DataGenerator().visualize_2D(bins_processed, self.w, self.rows, extreme_points=self.LFBs)
 
     #     return reward
 
@@ -173,7 +173,7 @@ class SolutionChecker(object):
         if left_border +  _bin[0] > closest_right:  # clashes with box on right or total box border
             ret = True
 
-        if self.LFBs[0][1] + _bin[1] > self.h:  # taller than total box
+        if self.LFBs[0][1] + _bin[1] > self.rows:  # taller than total box
             ret = True
 
         if ret:
@@ -188,7 +188,7 @@ class SolutionChecker(object):
 
         closest_right = sorted((x for x in self.LFBs if x[0] > left_border), key=lambda x: x[1])
         if not closest_right:
-            closest_right = (self.w, 0)
+            closest_right = (self.cols, 0)
         else:
             closest_right = closest_right[0]
         return closest_right
@@ -205,11 +205,11 @@ class SolutionChecker(object):
 
         fig1 = plt.figure()
         ax1 = fig1.add_subplot(111, aspect='equal')
-        ax1.set_xticks(list(range(self.w)))
-        ax1.set_yticks(list(range(self.h)))
+        ax1.set_xticks(list(range(self.cols)))
+        ax1.set_yticks(list(range(self.rows)))
         ax1.imshow(self.grid)
-        plt.xlim(0, self.w)
-        plt.ylim(0, self.h)
+        plt.xlim(0, self.cols)
+        plt.ylim(0, self.rows)
         plt.figure(1)
         plt.show()
         #plt.pause(0.2)

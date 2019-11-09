@@ -1,5 +1,6 @@
 import matplotlib
 from itertools import cycle
+import csv
 import random
 import numpy as np
 import numpy as np
@@ -7,6 +8,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import math
 from sklearn.decomposition import PCA
+from collections import defaultdict
 
 ORIENTATIONS = 2
 class DataGenerator(object):
@@ -15,6 +17,7 @@ class DataGenerator(object):
         self.w = w
         self.h = h
         self.frozen_first_batch = None
+        self.instances_from_file = defaultdict(lambda: defaultdict(list))
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
         self.w = w
@@ -51,6 +54,23 @@ class DataGenerator(object):
     def gen_matrix_instance(self, n, w, h, dimensions=2, seed=0):
         return self._transform_instance_to_matrix(self.gen_instance(
             n, w, h, dimensions=dimensions, seed=seed))
+
+    def read_instances(self):
+        with open('puzzles.csv') as csvfile:
+            csv_reader = csv.DictReader(csvfile, quotechar='"')
+            for row in csv_reader:
+                new_instance = DataGenerator.x_y_str_to_bins_format(row['tiles'])
+                self.instances_from_file[int(row['num_tiles'])][int(row['board_width']), int(row['board_height'])].append(new_instance)
+        return self.instances_from_file
+
+    @staticmethod
+    def x_y_str_to_bins_format(x_y_string):
+        _list = eval(x_y_string)
+        ret_list = []
+        unknown_position = (0, 0)
+        for el in _list:
+            ret_list.append([el['X'], el['Y'], unknown_position])
+        return ret_list
 
     @staticmethod
     def tile_to_matrix(tile, w, h):
@@ -222,7 +242,7 @@ class DataGenerator(object):
                 else:
                     new_state[position[0] + row ][position[1] + col] = 1
                     if vis_state is not None:
-                        new_vis_state[position[0] + row ][position[1] + col] = tile_index 
+                        new_vis_state[position[0] + row ][position[1] + col] = tile_index + 1
 
         return new_state, new_vis_state
 
