@@ -51,9 +51,38 @@ class DataGenerator(object):
         bins = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
         return np.array(bins)
 
+    def gen_tiles_and_board(self, n, w, h, dimensions=2, seed=0, order_tiles=False, from_file=False): # Generate random bin-packing instance
+        '''
+        generates tiles of both orientations
+        '''
+        if from_file:
+            instance_visual = self.gen_instance_from_file(n, w, h)
+        else:
+            instance_visual = self.gen_instance_visual(n, w, h, seed=seed)
+
+        tiles = self._transform_instance_visual_to_np_array(instance_visual, dimensions=dimensions)
+        new_tiles = []
+        for tile in tiles:
+            # 2 orientations
+            new_tiles.append(tuple(tile))
+            new_tiles.append((tile[1], tile[0]))
+        if order_tiles:
+            new_tiles = sorted(new_tiles, key=lambda x: (x[0], x[1]), reverse=True)
+
+        board = np.zeros((w, h))
+        return new_tiles, board
+
     def gen_matrix_instance(self, n, w, h, dimensions=2, seed=0):
         return self._transform_instance_to_matrix(self.gen_instance(
             n, w, h, dimensions=dimensions, seed=seed))
+
+    def gen_instance_from_file(self, n, w, h):
+        instances = self.read_instances()
+        try:
+            instance = instances[n][w, h][2]
+        except KeyError:
+            print('no such instance could be found in the file')
+        return instance
 
     def read_instances(self):
         with open('puzzles.csv') as csvfile:

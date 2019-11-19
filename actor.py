@@ -5,6 +5,76 @@ from solution_checker import SolutionChecker
 
 distr = tf.contrib.distributions
 
+class DynamicMultiRNN(object):
+    """
+        Implementation of a dynamic multi-cell RNN
+
+        Attributes:
+            action_size(int) -- Number of actions available
+            batch_size(int) -- Batch size.
+            num_activations(int) --  Number of activations in the LSTM cell
+            num_layers(int) -- Number of stacked LSTM layers
+            state_maxServiceLength(int) -- Max input sequence length
+
+            positions[Batch, seq_length] -- outputs the position
+    """
+
+    def __init__(self, action_size, batch_size, input_, input_len_, num_activations, num_layers):
+
+        self.action_size = action_size
+        self.batch_size = batch_size
+        self.num_activations = num_activations
+        self.num_layers = num_layers
+
+        self.positions = []
+        self.outputs = []
+
+        self.input_ = input_
+        self.input_len_ = input_len_
+
+        # Variables initializer
+        initializer = tf.contrib.layers.xavier_initializer()
+
+        # Generate multiple LSTM cell
+        cells = tf.nn.rnn_cell.MultiRNNCell(
+            [tf.nn.rnn_cell.LSTMCell(self.num_activations, state_is_tuple=True) for _ in range(self.num_layers)], state_is_tuple=True)
+
+        # LSTMs internal state
+        c_initial_states = []
+        h_initial_states = []
+
+        # Initial state (tuple) is trainable but same for all batch
+        for i in range(self.num_layers):
+            first_state = tf.get_variable("var{}".format(i), [1, self.num_activations], initializer=initializer)
+            #first_state = tf.Print(first_state, ["first_state", first_state], summarize=10)
+
+            c_initial_state = tf.tile(first_state, [self.batch_size, 1])
+            h_initial_state = tf.tile(first_state, [self.batch_size, 1])
+
+            c_initial_states.append(c_initial_state)
+            h_initial_states.append(h_initial_state)
+
+        rnn_tuple_state = tuple(
+            [tf.nn.rnn_cell.LSTMStateTuple(c_initial_states[idx], h_initial_states[idx])
+             for idx in range(self.num_layers)]
+        )
+
+        states_series, current_state = tf.nn.dynamic_rnn(cells, input_, initial_state=rnn_tuple_state, sequence_length=input_len_)
+        #states_series = tf.Print(states_series, ["states_series", states_series, tf.shape(states_series)], summarize=10)
+
+        self.outputs = tf.layers.dense(states_series, self.action_size, activation=tf.nn.softmax)       # [Batch, seq_length, action_size]
+        #self.outputs = tf.Print(self.outputs, ["outputs", self.outputs, tf.shape(self.outputs)],summarize=10)
+
+        # Multinomial distribution
+        prob = tf.contrib.distributions.Categorical(probs=self.outputs)
+
+        # Sample from distribution
+        self.positions = prob.sample()        # [Batch, seq_length]
+        self.positions = tf.cast(self.positions, tf.int32)
+        #self.positions = tf.Print(self.positions, ["position", self.positions, tf.shape(self.positions)], summarize=10)
+
+
+
 # Apply multihead attention to a 3d tensor with shape [batch_size, seq_length, n_hidden].
 # Attention size = n_hidden should be a multiple of num_head
 # Returns a 3d tensor with shape of [batch_size, seq_length, n_hidden]
@@ -145,8 +215,13 @@ class Actor(object):
         
         
     def encode_decode(self):
-        actor_embedding = embed_seq(input_seq=self.input_, from_=self.dimension, to_= self.input_embed, is_training=self.is_training, BN=True, initializer=self.initializer)
-        actor_encoding = encode_seq(input_seq=actor_embedding, input_dim=self.input_embed, num_stacks=self.num_stacks, num_heads=self.num_heads, num_neurons=self.num_neurons, is_training=self.is_training)
+        actor_embedding = embed_seq(
+            input_seq=self.input_, from_=self.dimension, to_= self.input_embed,
+            is_training=self.is_training, BN=True, initializer=self.initializer)
+        actor_encoding = encode_seq(
+            input_seq=actor_embedding, input_dim=self.input_embed,
+            num_stacks=self.num_stacks, num_heads=self.num_heads,
+            num_neurons=self.num_neurons, is_training=self.is_training)
         if self.is_training == False:
             actor_encoding = tf.tile(actor_encoding,[self.batch_size,1,1])
         
@@ -244,4 +319,3 @@ class Actor(object):
                 gvs2 = opt2.compute_gradients(loss2) # gradients
                 capped_gvs2 = [(tf.clip_by_norm(grad, 1.), var) for grad, var in gvs2 if grad is not None] # L2 clip
                 self.trn_op2 = opt2.apply_gradients(grads_and_vars=capped_gvs2, global_step=self.global_step2) # minimize op critic
-

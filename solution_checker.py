@@ -47,7 +47,7 @@ class SolutionChecker(object):
             if not next_lfb:
                 break
 
-            placed = self.place_element_on_grid(_bin, next_lfb, i + 1)
+            placed, new_grid = self.place_element_on_grid(_bin, next_lfb, i + 1, self.cols, self.rows)
             if not placed:
                 if combinatorial_reward:
                     return 1
@@ -55,6 +55,9 @@ class SolutionChecker(object):
                     reward += 1
                 else:
                     reward += (_bin[0] * _bin[1])
+            else:
+                self.grid = new_grid
+
 
         # scale from 0 to 1
         if reward == 0:
@@ -65,31 +68,41 @@ class SolutionChecker(object):
             else:
                 return reward / (self.cols * self.rows)
 
-    def get_next_lfb(self):
+    @staticmethod
+    def get_next_lfb_on_grid(grid):
         lfb = None
-        for i, _ in enumerate(self.grid):
-            for j, _val in enumerate(self.grid[i]):
-                if self.grid[i][j] == 0:
+        for i, _ in enumerate(grid):
+            for j, _val in enumerate(grid[i]):
+                if grid[i][j] == 0:
                     return (j, i)
         return lfb
 
-    def place_element_on_grid(self, _bin, position, val):
-        if position[0] + _bin[0] > self.cols:
+    def get_next_lfb(self):
+        return SolutionChecker.get_next_lfb_on_grid(self.grid)
+
+    @staticmethod
+    def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows):
+        new_grid = np.copy(grid)
+        if position[0] + _bin[0] > cols:
             # print(f'{position[0] + _bin[0]} bigger than width')
-            return False
-        if position[1] + _bin[1] > self.rows:
+            return False, None
+        if position[1] + _bin[1] > rows:
             # print(f'{position[1] + _bin[1]} bigger than height')
-            return False
+            return False, None
+        
 
         for i in range(int(_bin[1])):
             for j in range(int(_bin[0])):
-                row = self.grid[position[1] + i]
+                row = new_grid[position[1] + i]
                 if row[position[0] + j] != 0:
                     # print(f'position ({position[1] + i} {position[0] + j}) already taken')
-                    return False
+                    return False, None
                 row[position[0] + j] = val
 
-        return True
+        return True, new_grid
+
+    def place_element_on_grid(self, _bin, position, val, cols, rows):
+        return SolutionChecker.place_element_on_grid_given_grid(_bin, position, val, self.grid, self.cols, self.rows)
 
     # def get_reward(self, bins):
     #     '''

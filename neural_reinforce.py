@@ -40,6 +40,7 @@ from solution_checker import SolutionChecker
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from config_parser import get_config
+from actor import Actor
 
 """## 1. Data Generator"""
 
