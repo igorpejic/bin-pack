@@ -19,11 +19,12 @@ class DataGenerator(object):
         self.frozen_first_batch = None
         self.instances_from_file = defaultdict(lambda: defaultdict(list))
 
-    def gen_instance_visual(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
+    def gen_instance_visual(self, n, w, h, dimensions=2, seed=None): # Generate random bin-packing instance
         self.w = w
         self.h = h
-        if seed!=0:
+        if seed is not None:
             np.random.seed(seed)
+
         bins = [[w, h, (0, 0)]]
         while len(bins) <  n:
             random_bin_index = np.random.randint(0, len(bins), size=1)[0]
@@ -60,6 +61,10 @@ class DataGenerator(object):
         else:
             instance_visual = self.gen_instance_visual(n, w, h, seed=seed)
 
+        return self.transform_instance_visual_to_tiles_and_board(w, h, instance_visual, dimensions=dimensions, order_tiles=order_tiles)
+
+    def transform_instance_visual_to_tiles_and_board(self, w, h, instance_visual, dimensions=2, order_tiles=False):
+
         tiles = self._transform_instance_visual_to_np_array(instance_visual, dimensions=dimensions)
         new_tiles = []
         for tile in tiles:
@@ -79,7 +84,7 @@ class DataGenerator(object):
     def gen_instance_from_file(self, n, w, h):
         instances = self.read_instances()
         try:
-            instance = instances[n][w, h][2]
+            instance = instances[n][w, h][0]
         except KeyError:
             print('no such instance could be found in the file')
         return instance
