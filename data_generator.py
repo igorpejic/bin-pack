@@ -8,7 +8,9 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import math
 from sklearn.decomposition import PCA
-from collections import defaultdict
+from collections import defaultdict, namedtuple
+
+InstanceFromFile = namedtuple('InstanceFromFile', ['bins', 'id', 'n_tiles_placed'])
 
 ORIENTATIONS = 2
 class DataGenerator(object):
@@ -84,7 +86,7 @@ class DataGenerator(object):
     def gen_instance_from_file(self, n, w, h):
         instances = self.read_instances()
         try:
-            instance = instances[n][w, h][0]
+            instance = instances[n][w, h][0].bins
         except KeyError:
             print('no such instance could be found in the file')
         return instance
@@ -94,7 +96,8 @@ class DataGenerator(object):
             csv_reader = csv.DictReader(csvfile, quotechar='"')
             for row in csv_reader:
                 new_instance = DataGenerator.x_y_str_to_bins_format(row['tiles'])
-                self.instances_from_file[int(row['num_tiles'])][int(row['board_width']), int(row['board_height'])].append(new_instance)
+                self.instances_from_file[int(row['num_tiles'])][int(row['board_width']), int(row['board_height'])].append(
+                    InstanceFromFile(bins=new_instance, id=row['id'], n_tiles_placed=row['tiles_placed']))
         return self.instances_from_file
 
     @staticmethod
