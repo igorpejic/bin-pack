@@ -120,5 +120,22 @@ class TestDataGenerator(unittest.TestCase):
         _bin = (12, 10)
         self.assertTrue(solution_checker.is_bin_outside_borders(_bin))
 
+    def test_get_next_lfb_on_grid(self):
+        state = np.array([[1, 1], [0, 0]])
+        res = SolutionChecker.get_next_lfb_on_grid(state)
+        self.assertEqual(res, (0, 1)) 
+
+    def test_get_next_lfb_on_grid_2(self):
+        state = np.array([[1, 1, 0], [0, 0, 0]])
+        res = SolutionChecker.get_next_lfb_on_grid(state)
+        self.assertEqual(res, (2, 0)) 
+
+    def test_get_next_lfb_on_grid_2(self):
+        state = np.array([[1, 1, 1], [1, 1, 1]])
+        res = SolutionChecker.get_next_lfb_on_grid(state)
+        self.assertIsNone(res) 
+
+
+
 if __name__=='__main__':
     unittest.main()

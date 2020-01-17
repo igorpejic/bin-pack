@@ -8,7 +8,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import math
 from sklearn.decomposition import PCA
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, OrderedDict
 
 InstanceFromFile = namedtuple('InstanceFromFile', ['bins', 'id', 'n_tiles_placed'])
 
@@ -19,7 +19,7 @@ class DataGenerator(object):
         self.w = w
         self.h = h
         self.frozen_first_batch = None
-        self.instances_from_file = defaultdict(lambda: defaultdict(list))
+        self.instances_from_file = defaultdict(lambda: OrderedDict())
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=None): # Generate random bin-packing instance
         self.w = w
@@ -96,7 +96,8 @@ class DataGenerator(object):
             csv_reader = csv.DictReader(csvfile, quotechar='"')
             for row in csv_reader:
                 new_instance = DataGenerator.x_y_str_to_bins_format(row['tiles'])
-                self.instances_from_file[int(row['num_tiles'])][int(row['board_width']), int(row['board_height'])].append(
+                self.instances_from_file[int(row['num_tiles'])].setdefault(
+                    (int(row['board_width']), int(row['board_height'])), []).append(
                     InstanceFromFile(bins=new_instance, id=row['id'], n_tiles_placed=row['tiles_placed']))
         return self.instances_from_file
 

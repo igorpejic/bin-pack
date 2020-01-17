@@ -4,6 +4,7 @@ import math
 import bisect
 from sklearn.decomposition import PCA
 from data_generator import DataGenerator
+# from numba import jit
 
 from sortedcontainers import SortedKeyList
 
@@ -69,19 +70,25 @@ class SolutionChecker(object):
                 return reward / (self.cols * self.rows)
 
     @staticmethod
+    # @jit(nopython=True)
+    # TODO: maybe use numba to make it faster
     def get_next_lfb_on_grid(grid):
         lfb = None
-        for i, _ in enumerate(grid):
-            for j, _val in enumerate(grid[i]):
-                if grid[i][j] == 0:
-                    return (j, i)
-        return lfb
+        if type(grid) == list:
+            grid = np.array(grid)
+        res = np.unravel_index(grid.argmin(), grid.shape)
+        if res == (0, 0) and grid[0][0] != 0:
+            return None
+        return (res[1], res[0])
 
     def get_next_lfb(self):
         return SolutionChecker.get_next_lfb_on_grid(self.grid)
 
     @staticmethod
     def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows):
+
+        # TODO: check why are rows and cols reversed ?
+
         new_grid = np.copy(grid)
         if position[0] + _bin[0] > cols:
             # print(f'{position[0] + _bin[0]} bigger than width')
