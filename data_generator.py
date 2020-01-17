@@ -29,7 +29,7 @@ class DataGenerator(object):
 
         bins = [[w, h, (0, 0)]]
         while len(bins) <  n:
-            random_bin_index = np.random.randint(0, len(bins), size=1)[0]
+            random_bin_index = random.randint(0, len(bins) - 1)
             bin_to_split = bins[random_bin_index]
 
             axis_to_split = np.random.randint(0, 2, size=1)[0]
@@ -73,8 +73,8 @@ class DataGenerator(object):
             # 2 orientations
             new_tiles.append(tuple(tile))
             new_tiles.append((tile[1], tile[0]))
-        if order_tiles:
-            new_tiles = sorted(new_tiles, key=lambda x: (x[0], x[1]), reverse=True)
+        if order_tiles or True:
+            new_tiles = sorted(new_tiles, key=lambda x: x[1])
 
         board = np.zeros((w, h))
         return new_tiles, board

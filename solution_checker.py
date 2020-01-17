@@ -5,6 +5,7 @@ import bisect
 from sklearn.decomposition import PCA
 from data_generator import DataGenerator
 # from numba import jit
+import search
 
 from sortedcontainers import SortedKeyList
 
@@ -22,7 +23,7 @@ class SolutionChecker(object):
 
 
     def initialize_grid(self):
-        return [[0 for x in range(self.cols)] for y in range(self.rows)]
+        return np.array([[0 for x in range(self.cols)] for y in range(self.rows)])
 
 
     def get_rewards(self, batch_bins, count_tiles=False, combinatorial_reward=False):
@@ -74,35 +75,44 @@ class SolutionChecker(object):
     # TODO: maybe use numba to make it faster
     def get_next_lfb_on_grid(grid):
         lfb = None
+        n_cols = grid.shape[1]
         if type(grid) == list:
             grid = np.array(grid)
-        res = np.unravel_index(grid.argmin(), grid.shape)
-        if res == (0, 0) and grid[0][0] != 0:
+        res = search.find_first(0, grid.ravel()) 
+        if res == -1:
             return None
-        return (res[1], res[0])
+        res_row = res // n_cols
+        res_col = res % n_cols
+
+        # TODO: why is this swapped?
+        return (res_col, res_row)
 
     def get_next_lfb(self):
         return SolutionChecker.get_next_lfb_on_grid(self.grid)
 
     @staticmethod
-    def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows):
+    def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows, get_only_success=False):
 
         # TODO: check why are rows and cols reversed ?
 
-        new_grid = np.copy(grid)
         if position[0] + _bin[0] > cols:
             # print(f'{position[0] + _bin[0]} bigger than width')
             return False, None
         if position[1] + _bin[1] > rows:
             # print(f'{position[1] + _bin[1]} bigger than height')
             return False, None
-        
 
-        slice_of_new_grid_all_zeros = np.all(new_grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] == 0)
-        if not slice_of_new_grid_all_zeros:
+        # need to check only the width as height is always free
+        slice_of_new_grid_any_one = grid[position[1] , position[0]: position[0] + _bin[0]]
+
+        # is it 1 or any other number ??
+        if 1 in slice_of_new_grid_any_one:
             return False, None
-        new_grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] = val
 
+        elif get_only_success:
+            return True, None
+
+        grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] = val
         # for i in range(int(_bin[1])):
         #     for j in range(int(_bin[0])):
         #         row = new_grid[position[1] + i]
@@ -111,7 +121,7 @@ class SolutionChecker(object):
         #             return False, None
         #         row[position[0] + j] = val
 
-        return True, new_grid
+        return True, grid
 
     def place_element_on_grid(self, _bin, position, val, cols, rows):
         return SolutionChecker.place_element_on_grid_given_grid(_bin, position, val, self.grid, self.cols, self.rows)

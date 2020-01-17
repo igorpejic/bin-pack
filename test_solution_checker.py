@@ -34,7 +34,7 @@ class TestDataGenerator(unittest.TestCase):
 
         solution_checker = SolutionChecker(n, h, w)
         self.assertEqual(
-            solution_checker.get_reward(perfect_bin_configuration),
+            solution_checker.get_reward(np.array(perfect_bin_configuration)),
             0
         )
 
