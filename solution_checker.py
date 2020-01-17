@@ -98,13 +98,18 @@ class SolutionChecker(object):
             return False, None
         
 
-        for i in range(int(_bin[1])):
-            for j in range(int(_bin[0])):
-                row = new_grid[position[1] + i]
-                if row[position[0] + j] != 0:
-                    # print(f'position ({position[1] + i} {position[0] + j}) already taken')
-                    return False, None
-                row[position[0] + j] = val
+        slice_of_new_grid_all_zeros = np.all(new_grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] == 0)
+        if not slice_of_new_grid_all_zeros:
+            return False, None
+        new_grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] = val
+
+        # for i in range(int(_bin[1])):
+        #     for j in range(int(_bin[0])):
+        #         row = new_grid[position[1] + i]
+        #         if row[position[0] + j] != 0:
+        #             # print(f'position ({position[1] + i} {position[0] + j}) already taken')
+        #             return False, None
+        #         row[position[0] + j] = val
 
         return True, new_grid
 
