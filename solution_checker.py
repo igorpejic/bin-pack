@@ -83,8 +83,6 @@ class SolutionChecker(object):
     def get_next_lfb_on_grid(grid):
         lfb = None
         n_cols = grid.shape[1]
-        if type(grid) == list:
-            grid = np.array(grid)
         res = search.find_first(0, grid.ravel()) 
         if res == -1:
             return None
@@ -257,7 +255,7 @@ class SolutionChecker(object):
     @staticmethod
     def get_next_turn(state, tile, val=1, get_only_success=False, destroy_state=False):
         '''
-        destroy_state - will ruin the state.board
+        destroy_state - will ruin the state.board, populating it with val
         '''
         next_position = SolutionChecker.get_next_lfb_on_grid(state.board)
         # one without the other should not be possible
@@ -275,8 +273,6 @@ class SolutionChecker(object):
             tile, next_position,
             val, board, get_cols(state.board), get_rows(state.board),
             get_only_success=get_only_success)
-
-        # self.n_tiles_placed += 1
 
         if not success:
             # cannot place the tile. this branch will not be considered
@@ -297,9 +293,6 @@ class SolutionChecker(object):
 
     @staticmethod
     def get_valid_next_moves(state, tiles, val=1):
-        '''
-        Works on the assumption that tiles are sorted ascending on column axis
-        '''
         possible_tile_moves = []
         next_lfb = SolutionChecker.get_next_lfb_on_grid(state.board)
         next_occupied_col = SolutionChecker.get_next_occupied_col(state.board, next_lfb)
