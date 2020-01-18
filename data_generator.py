@@ -74,7 +74,7 @@ class DataGenerator(object):
             new_tiles.append(tuple(tile))
             new_tiles.append((tile[1], tile[0]))
         if order_tiles or True:
-            new_tiles = sorted(new_tiles, key=lambda x: x[1])
+            new_tiles = sorted(new_tiles, key=lambda x: (x[1], x[0]))
 
         board = np.zeros((w, h))
         return new_tiles, board

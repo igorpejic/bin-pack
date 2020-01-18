@@ -5,10 +5,16 @@ import bisect
 from sklearn.decomposition import PCA
 from data_generator import DataGenerator
 # from numba import jit
+from state import State
+import uuid
 import search
 
 from sortedcontainers import SortedKeyList
 
+
+ALL_TILES_USED = 'ALL_TILES_USED'
+TILE_CANNOT_BE_PLACED = 'TILE_CANNOT_BE_PLACED'
+NO_NEXT_POSITION_TILES_UNUSED = 'NO_NEXT_POSITION_TILES_UNUSED'
 
 class SolutionChecker(object):
 
@@ -71,8 +77,6 @@ class SolutionChecker(object):
                 return reward / (self.cols * self.rows)
 
     @staticmethod
-    # @jit(nopython=True)
-    # TODO: maybe use numba to make it faster
     def get_next_lfb_on_grid(grid):
         lfb = None
         n_cols = grid.shape[1]
@@ -81,11 +85,11 @@ class SolutionChecker(object):
         res = search.find_first(0, grid.ravel()) 
         if res == -1:
             return None
+        print(res)
         res_row = res // n_cols
         res_col = res % n_cols
 
-        # TODO: why is this swapped?
-        return (res_col, res_row)
+        return (res_row, res_col)
 
     def get_next_lfb(self):
         return SolutionChecker.get_next_lfb_on_grid(self.grid)
@@ -93,17 +97,15 @@ class SolutionChecker(object):
     @staticmethod
     def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows, get_only_success=False):
 
-        # TODO: check why are rows and cols reversed ?
-
-        if position[0] + _bin[0] > cols:
-            # print(f'{position[0] + _bin[0]} bigger than width')
+        if position[1] + _bin[1] > cols:
+            # print(f'{position[1] + _bin[1]} bigger than width')
             return False, None
-        if position[1] + _bin[1] > rows:
-            # print(f'{position[1] + _bin[1]} bigger than height')
+        if position[0] + _bin[0] > rows:
+            # print(f'{position[0] + _bin[0]} bigger than height')
             return False, None
 
         # need to check only the width as height is always free
-        slice_of_new_grid_any_one = grid[position[1] , position[0]: position[0] + _bin[0]]
+        slice_of_new_grid_any_one = grid[position[0], position[1]: position[1] + _bin[1]]
 
         # is it 1 or any other number ??
         if 1 in slice_of_new_grid_any_one:
@@ -112,7 +114,7 @@ class SolutionChecker(object):
         elif get_only_success:
             return True, None
 
-        grid[position[1]: position[1] + _bin[1], position[0]: position[0] + _bin[0]] = val
+        grid[position[0]: position[0] + _bin[0], position[1]: position[1] + _bin[1]] = val
         # for i in range(int(_bin[1])):
         #     for j in range(int(_bin[0])):
         #         row = new_grid[position[1] + i]
@@ -249,3 +251,59 @@ class SolutionChecker(object):
         plt.show()
         #plt.pause(0.2)
         plt.close()
+
+    @staticmethod
+    def get_next_turn(state, tile, val=1, get_only_success=False, destroy_state=False):
+        '''
+        destroy_state - will ruin the state.board
+        '''
+        next_position = SolutionChecker.get_next_lfb_on_grid(state.board)
+        # one without the other should not be possible
+        if not next_position and len(state.tiles) == 0:
+            print('solution found!')
+            return ALL_TILES_USED, None
+        elif not next_position:
+            return NO_NEXT_POSITION_TILES_UNUSED, None
+
+        if destroy_state:
+            board = state.board
+        else:
+            board = np.copy(state.board)
+        success, new_board = SolutionChecker.place_element_on_grid_given_grid(
+            tile, next_position,
+            val, board, get_cols(state.board), get_rows(state.board),
+            get_only_success=get_only_success)
+
+        # self.n_tiles_placed += 1
+
+        if not success:
+            # cannot place the tile. this branch will not be considered
+            return TILE_CANNOT_BE_PLACED, None
+        return True, new_board
+
+
+    @staticmethod
+    def get_valid_next_moves(state, tiles, val=1):
+        '''
+        Works on the assumption that tiles are sorted ascending on column axis
+        '''
+        possible_tile_moves = []
+        for tile in tiles:
+            success, _ = SolutionChecker.get_next_turn(
+                state, tile, val, get_only_success=True)
+            #if success == TILE_CANNOT_BE_PLACED:
+            #    # the tiles were sorted by column size so if it does not fit it means
+            #    # no bigger ones will fit
+            #    
+            #    # TODO: this is not true, because height should also be taken in consideration
+            #    break
+            #else:
+            if success is True:
+                possible_tile_moves.append(tile)
+        return possible_tile_moves
+
+def get_cols(board):
+    return board.shape[1]
+
+def get_rows(board):
+    return board.shape[0]
