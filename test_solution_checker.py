@@ -8,20 +8,20 @@ from state import State
 
 class TestDataGenerator(unittest.TestCase):
 
-    # def test_gen_instance_visual(self):
+    def test_gen_instance_visual_22(self):
 
-    #     n = 20
-    #     w = 40
-    #     h = 40
-    #     dg = DataGenerator()
-    #     some_instance = dg.gen_instance_visual(n, w, h)
-    #     self.assertEqual(len(some_instance), n)
-    #     for _bin in some_instance:
-    #         self.assertEqual(len(_bin), 3)
-    #         self.assertTrue(_bin[0] <= w)
-    #         self.assertTrue(_bin[1] <= h)
+        n = 20
+        w = 40
+        h = 40
+        dg = DataGenerator()
+        some_instance = dg.gen_instance_visual(n, w, h)
+        self.assertEqual(len(some_instance), n)
+        for _bin in some_instance:
+            self.assertEqual(len(_bin), 3)
+            self.assertTrue(_bin[0] <= w)
+            self.assertTrue(_bin[1] <= h)
 
-    #     # dg.visualize_2D(some_instance, w, h)
+        # dg.visualize_2D(some_instance, w, h)
 
 
     def test_check_perfect_solution(self):
