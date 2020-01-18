@@ -259,8 +259,77 @@ class TestGetValidNextMoves(unittest.TestCase):
         next_moves = SolutionChecker.get_valid_next_moves(self.state, self.tiles)
         self.assertEqual(next_moves, [(1, 1), (2, 1), (1, 2), (3, 2)])
 
+    def test_get_valid_next_moves_3(self):
+        self.board = np.array([
+            [1, 1, 1, 1],
+            [1, 0, 0, 1],
+            [1, 0, 0, 1],
+            [1, 0, 0, 1]
+        ])
+        tiles_list = [(2, 1), (1, 2), (3, 3), (3, 2), (1, 1), (6, 1)]
+
+        self.tiles = sorted(tiles_list, key=lambda x: (x[1], x[0]))
+        self.state = State(self.board, self.tiles)
+        next_moves = SolutionChecker.get_valid_next_moves(self.state, self.tiles)
+        self.assertEqual(next_moves, [(1, 1), (2, 1), (1, 2), (3, 2)])
+
+    def test_get_valid_next_moves_4(self):
+        self.board = np.array([
+            [1, 1, 1, 1],
+            [1, 0, 1, 0],
+            [1, 0, 1, 0],
+            [1, 0, 1, 0]
+        ])
+        tiles_list = [(2, 1), (1, 2), (3, 3), (3, 2), (1, 1), (6, 1), (3, 1)]
+
+        self.tiles = sorted(tiles_list, key=lambda x: (x[1], x[0]))
+        self.state = State(self.board, self.tiles)
+        next_moves = SolutionChecker.get_valid_next_moves(self.state, self.tiles)
+        self.assertEqual(next_moves, [(1, 1), (2, 1), (3, 1)])
+
+    def test_get_valid_next_moves_5(self):
+        self.board = np.array([
+            [1, 1, 1, 1],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0]
+        ])
+        tiles_list = [(2, 3), (2, 4), (3, 3)]
+
+        self.tiles = sorted(tiles_list, key=lambda x: (x[1], x[0]))
+        self.state = State(self.board, self.tiles)
+        next_moves = SolutionChecker.get_valid_next_moves(self.state, self.tiles)
+        self.assertEqual(next_moves, [(2, 3), (3, 3)])
 
 
+class TestEliminatePairTiles(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_eliminate_pair_tiles(self):
+        tiles_list = [(1, 1), (2, 1), (1, 1), (1, 2)]
+
+        new_tiles = SolutionChecker.eliminate_pair_tiles(tiles_list, tile_to_remove=(1, 1))
+        self.assertEqual(new_tiles, [(2, 1), (1, 2)])
+
+    def test_eliminate_pair_tiles_2(self):
+        tiles_list = [(8, 1), (2, 1), (1, 1), (1, 8)]
+
+        new_tiles = SolutionChecker.eliminate_pair_tiles(tiles_list, tile_to_remove=(1, 8))
+        self.assertEqual(new_tiles, [(2, 1), (1, 1)])
+
+    def test_eliminate_pair_tiles_3(self):
+        tiles_list = [(1, 1), (2, 1), (1, 1), (1, 1), (2, 1), (1, 1)]
+
+        new_tiles = SolutionChecker.eliminate_pair_tiles(tiles_list, tile_to_remove=(1, 1))
+        self.assertEqual(new_tiles, [(2, 1), (1, 1), (2, 1), (1, 1)])
+
+    def test_eliminate_pair_tiles_when_pair_is_not_present(self):
+        tiles_list = [(1, 8), (2, 1), (1, 1), (1, 1), (2, 1), (1, 1)]
+
+        with self.assertRaises(ValueError):
+            SolutionChecker.eliminate_pair_tiles(tiles_list, tile_to_remove=(1, 8))
 
 if __name__=='__main__':
     unittest.main()

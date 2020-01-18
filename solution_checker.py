@@ -10,11 +10,14 @@ import uuid
 import search
 
 from sortedcontainers import SortedKeyList
+from collections import OrderedDict
 
 
 ALL_TILES_USED = 'ALL_TILES_USED'
 TILE_CANNOT_BE_PLACED = 'TILE_CANNOT_BE_PLACED'
 NO_NEXT_POSITION_TILES_UNUSED = 'NO_NEXT_POSITION_TILES_UNUSED'
+
+GLOBAL_OCCUPIED_VAL = 1
 
 class SolutionChecker(object):
 
@@ -85,7 +88,6 @@ class SolutionChecker(object):
         res = search.find_first(0, grid.ravel()) 
         if res == -1:
             return None
-        print(res)
         res_row = res // n_cols
         res_col = res % n_cols
 
@@ -108,7 +110,7 @@ class SolutionChecker(object):
         slice_of_new_grid_any_one = grid[position[0], position[1]: position[1] + _bin[1]]
 
         # is it 1 or any other number ??
-        if 1 in slice_of_new_grid_any_one:
+        if GLOBAL_OCCUPIED_VAL in slice_of_new_grid_any_one:
             return False, None
 
         elif get_only_success:
@@ -283,24 +285,45 @@ class SolutionChecker(object):
 
 
     @staticmethod
+    def get_next_occupied_col(board, next_position):
+        that_position_row_until_next_occupied = board[
+            next_position[0], next_position[1]:]
+
+        res = search.find_first(GLOBAL_OCCUPIED_VAL, that_position_row_until_next_occupied)
+        if res == -1:
+            return board.shape[1]
+        res_col = next_position[1] + res 
+        return res_col
+
+    @staticmethod
     def get_valid_next_moves(state, tiles, val=1):
         '''
         Works on the assumption that tiles are sorted ascending on column axis
         '''
         possible_tile_moves = []
+        next_lfb = SolutionChecker.get_next_lfb_on_grid(state.board)
+        next_occupied_col = SolutionChecker.get_next_occupied_col(state.board, next_lfb)
+        max_allowed_col_size = next_occupied_col - next_lfb[1] 
+        max_height = state.board.shape[0]
         for tile in tiles:
-            success, _ = SolutionChecker.get_next_turn(
-                state, tile, val, get_only_success=True)
-            #if success == TILE_CANNOT_BE_PLACED:
-            #    # the tiles were sorted by column size so if it does not fit it means
-            #    # no bigger ones will fit
-            #    
-            #    # TODO: this is not true, because height should also be taken in consideration
-            #    break
-            #else:
-            if success is True:
+            if tile[1] <= max_allowed_col_size and tile[0] + next_lfb[0] <= max_height:
                 possible_tile_moves.append(tile)
         return possible_tile_moves
+
+    @staticmethod
+    def eliminate_pair_tiles(tiles, tile_to_remove):
+        '''
+        search through the list to find rotated instance, 
+        then remove both
+        '''
+        index = tiles.index(tile_to_remove)
+        new_tiles = tiles[:index] + tiles[index + 1:]
+
+        rotated_tile = (tile_to_remove[1], tile_to_remove[0])
+        rotated_tile_index = new_tiles.index(rotated_tile)
+
+        new_tiles = new_tiles[:rotated_tile_index] + new_tiles[rotated_tile_index + 1:]
+        return new_tiles
 
 def get_cols(board):
     return board.shape[1]
