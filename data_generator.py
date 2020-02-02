@@ -48,11 +48,13 @@ class DataGenerator(object):
         return bins
 
     def _transform_instance_visual_to_np_array(self, bins, dimensions=2):
-        return np.array([x[:dimensions] for x in bins])
+        _bins = np.array([x[:dimensions] for x in bins])
+        solution = sorted(bins, key=lambda x: (x[2][0], x[2][1]))
+        return _bins, solution
 
     def gen_instance(self, n, w, h, dimensions=2, seed=0): # Generate random bin-packing instance
-        bins = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
-        return np.array(bins)
+        bins, solution = self._transform_instance_visual_to_np_array(self.gen_instance_visual(n, w, h, seed=seed), dimensions=dimensions)
+        return np.array(bins), solution
 
     def gen_tiles_and_board(self, n, w, h, dimensions=2, seed=0, order_tiles=False, from_file=False): # Generate random bin-packing instance
         '''
@@ -79,9 +81,14 @@ class DataGenerator(object):
         board = np.zeros((w, h))
         return new_tiles, board
 
-    def gen_matrix_instance(self, n, w, h, dimensions=2, seed=0):
-        return self._transform_instance_to_matrix(self.gen_instance(
-            n, w, h, dimensions=dimensions, seed=seed))
+    def gen_matrix_instance(self, n, w, h, dimensions=2, seed=0, with_solution=False):
+        bins, solution = self.gen_instance(
+            n, w, h, dimensions=dimensions, seed=seed)
+        if with_solution:
+            return self._transform_instance_to_matrix(bins), solution
+        else:
+            return self._transform_instance_to_matrix(bins)
+
 
     def gen_instance_from_file(self, n, w, h):
         instances = self.read_instances()
@@ -301,7 +308,7 @@ class DataGenerator(object):
         if freeze_first_batch and self.frozen_first_batch:
             return self.frozen_first_batch
         for _ in range(batch_size):
-            input_ = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
+            input_, solution = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
             input_batch.append(input_)
 
         if freeze_first_batch:
@@ -313,7 +320,7 @@ class DataGenerator(object):
 
     def test_batch(self, batch_size, n, w, h, dimensions=2, seed=0, shuffle=False): # Generate random batch for testing procedure
         input_batch = []
-        input_ = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
+        input_, solution = self.gen_instance(n, w, h, dimensions=dimensions, seed=seed)
         for _ in range(batch_size): 
             sequence = np.copy(input_)
             if shuffle==True: 

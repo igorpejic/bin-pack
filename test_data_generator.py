@@ -26,8 +26,9 @@ class TestDataGenerator(unittest.TestCase):
         w = 40
         h = 40
         dg = DataGenerator()
-        some_instance = dg.gen_instance(n, w, h)
+        some_instance, solution = dg.gen_instance(n, w, h)
         self.assertEqual(len(some_instance), n)
+        self.assertEqual(len(solution), n)
         for _bin in some_instance:
             self.assertEqual(len(_bin), 2)
             self.assertTrue(_bin[0] <= w)
