@@ -69,7 +69,7 @@ class DataGenerator(object):
 
     def transform_instance_visual_to_tiles_and_board(self, w, h, instance_visual, dimensions=2, order_tiles=False):
 
-        tiles = self._transform_instance_visual_to_np_array(instance_visual, dimensions=dimensions)
+        tiles, solution = self._transform_instance_visual_to_np_array(instance_visual, dimensions=dimensions)
         new_tiles = []
         for tile in tiles:
             # 2 orientations
@@ -127,7 +127,7 @@ class DataGenerator(object):
 
 
 
-    def _transform_instance_to_matrix(self, tiles):
+    def _transform_instance_to_matrix(self, tiles, only_one_orientation=False):
         """
         transforms list of bins:
         [[2, 3], [4, 5]]
@@ -143,8 +143,12 @@ class DataGenerator(object):
         w = self.w
 
         all_slices = None
+        orientations = range(ORIENTATIONS)
+        if only_one_orientation:
+            orientations = [0]
+
         for tile in tiles:
-            for orientation in range(ORIENTATIONS):
+            for orientation in orientations:
                 if orientation == 0:
                     _slice = self.tile_to_matrix(tile, w, h)
                 else:
@@ -161,6 +165,7 @@ class DataGenerator(object):
 
     @staticmethod
     def get_matrix_tile_dims(tile):
+        #TODO: optimize
         matrix_rows, matrix_cols = tile.shape
         rows = 0
         cols = 0
