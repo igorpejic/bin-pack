@@ -154,11 +154,11 @@ class DataGenerator(object):
                 else:
                     _slice = self.tile_to_matrix((tile[1], tile[0]), w, h)
                 if all_slices is not None:
-                    _slice = np.reshape(_slice, (1, _slice.shape[0], _slice.shape[1]))
-                    all_slices = np.concatenate((all_slices, _slice), axis=0)
+                    _slice = np.reshape(_slice, (_slice.shape[0], _slice.shape[1], 1))
+                    all_slices = np.concatenate((all_slices, _slice), axis=2)
                 else:
                     all_slices = _slice
-                    all_slices = np.reshape(all_slices, (1, _slice.shape[0], _slice.shape[1]))
+                    all_slices = np.reshape(all_slices, (_slice.shape[0], _slice.shape[1], 1))
 
         return all_slices
 
