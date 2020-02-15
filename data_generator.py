@@ -22,6 +22,7 @@ class DataGenerator(object):
         self.instances_from_file = defaultdict(lambda: OrderedDict())
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=None): # Generate random bin-packing instance
+        no_duplicates = True
         self.w = w
         self.h = h
         if seed is not None:
@@ -33,16 +34,23 @@ class DataGenerator(object):
             bin_to_split = bins[random_bin_index]
 
             axis_to_split = np.random.randint(0, 2, size=1)[0]
+
             
             if bin_to_split[axis_to_split] <= 1:
                 # cant split anymore; this is minimum size
                 continue
 
-            bins.pop(random_bin_index)
+            random_bin = bins[random_bin_index]
 
             split_val = int(np.random.randint(1, bin_to_split[axis_to_split], size=1)[0])
             new_bins = self._split_bin(bin_to_split, axis_to_split, split_val)
 
+            if no_duplicates:
+                _bins_sizes = [(x[:2]) for x in bins]
+                if new_bins[0][:2] in _bins_sizes or new_bins[1][:2] in _bins_sizes:
+                    continue
+
+            bins.pop(random_bin_index)
             bins.insert(random_bin_index, new_bins[0])
             bins.insert(random_bin_index, new_bins[1])
         return bins
