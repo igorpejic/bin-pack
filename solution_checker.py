@@ -318,8 +318,92 @@ class SolutionChecker(object):
         new_tiles = new_tiles[:rotated_tile_index] + new_tiles[rotated_tile_index + 1:]
         return new_tiles
 
+
+    @staticmethod
+    def get_possible_tile_actions_given_grid(grid, tiles, pad_with_zeros=False):
+        '''
+        given a grid and tiles return the tiles which can be placed in lfb
+        '''
+        next_lfb = SolutionChecker.get_next_lfb_on_grid(grid)
+
+        orig_tiles_length = len(tiles)
+        new_tiles = []
+        rows, cols = grid.shape
+        for i, tile in enumerate(tiles):
+            success, _ = SolutionChecker.place_element_on_grid_given_grid(
+                tile, next_lfb,
+                val=1, grid=grid, cols=cols, rows=rows, get_only_success=True
+            )
+            if not success:
+                continue
+            new_tiles.append(tile)
+
+        if pad_with_zeros:
+            new_tiles = SolutionChecker.pad_tiles_with_zero_scalars(
+                new_tiles, orig_tiles_length - len(new_tiles))
+        return new_tiles
+
+    @staticmethod
+    def get_valid_tile_actions_indexes_given_grid(grid, tiles):
+        '''
+        returns indexes of actions which can be performed
+        '''
+        next_lfb = SolutionChecker.get_next_lfb_on_grid(grid)
+
+        tiles_indexes = []
+        rows, cols = grid.shape
+        for i, tile in enumerate(tiles):
+            if tile[0] == 0 and tile[1] == 0:
+                tiles_indexes.append(0)
+                continue
+
+            success, _ = SolutionChecker.place_element_on_grid_given_grid(
+                tile, next_lfb,
+                val=1, grid=grid, cols=cols, rows=rows, get_only_success=True
+            )
+            if not success:
+                tiles_indexes.append(0)
+            else:
+                tiles_indexes.append(1)
+        return tiles_indexes
+
+    @staticmethod
+    def pad_tiles_with_zero_scalars(tiles, n_zero_tiles_to_add):
+        '''
+        add tiles with zero matrices to compensate for tiles which were already placed
+        '''
+        new_tiles = tiles[:]
+        for i in range(n_zero_tiles_to_add):
+            new_tiles.append([0, 0])
+        return new_tiles
+
+    @staticmethod
+    def tiles_to_np_array(tiles):
+        return np.array([np.array(x) for x in tiles])
+
+    @staticmethod
+    def get_n_nonplaced_tiles(_tiles_ints):
+        _tiles_ints = [list(x) for x in _tiles_ints]
+        n_possible_tiles = len([x for x in _tiles_ints if x != [0, 0]])
+        return n_possible_tiles
+
+    @staticmethod
+    def is_any_moves_left(tiles):
+        return get_n_possible_tiles(tiles) != 0
+
+    @staticmethod
+    def get_tiles_with_orientation(tiles):
+        if isinstance(tiles, np.ndarray): 
+            tiles = tiles.tolist()
+        tiles_with_orientations = tiles[:]
+        for tile in tiles:
+            tiles_with_orientations.append((tile[1], tile[0]))
+        return tiles_with_orientations
+
+
 def get_cols(board):
     return board.shape[1]
 
 def get_rows(board):
     return board.shape[0]
+

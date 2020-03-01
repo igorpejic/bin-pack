@@ -391,22 +391,3 @@ class DataGenerator(object):
         plt.show()
         #plt.pause(0.2)
         #plt.close()
-
-    @staticmethod
-    def get_possible_tile_actions_given_grid(grid, tiles):
-        '''
-        given a grid and tiles return the tiles which can be placed in lfb
-        '''
-        next_lfb = SolutionChecker.get_next_lfb_on_grid(grid)
-
-        new_tiles = []
-        rows, cols = grid.shape
-        for i, tile in enumerate(tiles):
-            success, _ = SolutionChecker.place_element_on_grid_given_grid(
-                tile, next_lfb,
-                val=1, grid=grid, cols=cols, rows=rows, get_only_success=True
-            )
-            if not success:
-                continue
-            new_tiles.append(tile)
-        return new_tiles

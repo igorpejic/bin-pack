@@ -331,5 +331,45 @@ class TestEliminatePairTiles(unittest.TestCase):
         with self.assertRaises(ValueError):
             SolutionChecker.eliminate_pair_tiles(tiles_list, tile_to_remove=(1, 8))
 
+
+class TestGetPossibleTileActions(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_get_possible_tile_actions_given_grid(self):
+        grid = np.array([
+            [1, 1, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+        ])
+        tiles = [[1, 2], [2, 1], [4, 5], [1, 1], [1, 1], [3, 2], [3, 3], [2, 3]]
+        possible_tiles_to_place = SolutionChecker.get_possible_tile_actions_given_grid(grid, tiles)
+
+        self.assertEqual(possible_tiles_to_place, [[1, 2], [2, 1], [1, 1], [1, 1], [3, 2]])
+
+class TestPadTilesWithZeroScalars(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_pad(self):
+        tiles = [[1, 2], [2, 1], [4, 5]]
+        padded_tiles = SolutionChecker.pad_tiles_with_zero_scalars(tiles, 2)
+
+        self.assertEqual(len(padded_tiles), 5)
+        self.assertEqual([[1, 2], [2, 1], [4, 5], [0, 0], [0, 0]], padded_tiles)
+
+    def test_get_valid_actions_indexed_given_grid(self):
+
+        grid = np.array([
+            [1, 1, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+        ])
+        tiles = [[1, 2], [2, 1], [0, 0], [4, 5], [1, 1], [1, 1], [3, 2], [3, 3], [2, 3]]
+        possible_tiles_indexes = SolutionChecker.get_valid_tile_actions_indexes_given_grid(
+            grid, tiles)
+
+        self.assertEqual(possible_tiles_indexes, [1, 1, 0, 0, 1, 1, 1, 0, 0])
+
 if __name__=='__main__':
     unittest.main()
