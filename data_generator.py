@@ -22,7 +22,7 @@ class DataGenerator(object):
         self.instances_from_file = defaultdict(lambda: OrderedDict())
 
     def gen_instance_visual(self, n, w, h, dimensions=2, seed=None): # Generate random bin-packing instance
-        no_duplicates = True
+        no_duplicates = False
         self.w = w
         self.h = h
         if seed is not None:
@@ -47,7 +47,15 @@ class DataGenerator(object):
 
             if no_duplicates:
                 _bins_sizes = [(x[:2]) for x in bins]
-                if new_bins[0][:2] in _bins_sizes or new_bins[1][:2] in _bins_sizes:
+                rotated_bin_1 = [new_bins[0][:2][1], new_bins[0][:2][0]]
+                rotated_bin_2 = [new_bins[1][:2][1], new_bins[1][:2][0]]
+                if (new_bins[0][:2] in _bins_sizes or
+                        new_bins[1][:2] in _bins_sizes or
+                        rotated_bin_1 in _bins_sizes or
+                        rotated_bin_2 in _bins_sizes or
+                        new_bins[0][:2] == new_bins[1][:2] 
+                        or rotated_bin_2 == new_bins[0][:2]
+                        or rotated_bin_1 == new_bins[1][:2]):
                     continue
 
             bins.pop(random_bin_index)
@@ -162,8 +170,7 @@ class DataGenerator(object):
                 else:
                     _slice = self.tile_to_matrix((tile[1], tile[0]), w, h)
                 if all_slices is not None:
-                    _slice = np.reshape(_slice, (_slice.shape[0], _slice.shape[1], 1))
-                    all_slices = np.concatenate((all_slices, _slice), axis=2)
+                    all_slices = np.dstack((all_slices, _slice))
                 else:
                     all_slices = _slice
                     all_slices = np.reshape(all_slices, (_slice.shape[0], _slice.shape[1], 1))
@@ -234,29 +241,29 @@ class DataGenerator(object):
         and move them to back of stack bringing forward new ones
         """
         new_stack = np.copy(stack)
-        rows = new_stack.shape[1] 
-        cols = new_stack.shape[2] 
+        rows = new_stack.shape[0] 
+        cols = new_stack.shape[1] 
 
         if position >= cols * rows:
-            tile = new_stack[2]
+            tile = new_stack[:, :, 2]
             position = position - rows * cols
         else:
-            tile = new_stack[1]
+            tile = new_stack[:, :, 1]
 
-        new_stack = np.delete(new_stack, 1, axis=0)
-        new_stack = np.delete(new_stack, 1, axis=0)
+        new_stack = np.delete(new_stack, 1, axis=2)
+        new_stack = np.delete(new_stack, 1, axis=2)
 
-        new_stack = np.concatenate((new_stack, np.zeros([1, rows, cols])), axis=0)
-        new_stack = np.concatenate((new_stack, np.zeros([1, rows, cols])), axis=0)
+        new_stack = np.dstack((new_stack, np.zeros([rows, cols])))
+        new_stack = np.dstack((new_stack, np.zeros([rows, cols])))
 
         position = DataGenerator.position_index_to_row_col(
             position, tile.shape[1], tile.shape[0]
         )
 
         ret = DataGenerator.add_tile_to_state(
-            new_stack[0], tile, position, tile_index=tile_index, vis_state=vis_state)
+            new_stack[:, :, 0], tile, position, tile_index=tile_index, vis_state=vis_state)
 
-        new_stack[0] = ret[0]
+        new_stack[:, :, 0] = ret[0]
         return new_stack, ret[1]
 
     @staticmethod
@@ -266,7 +273,8 @@ class DataGenerator(object):
         assumes that all placed tiles are matrices with all zeros
         """
         count = 0
-        for _slice in stack[1:]:
+        for i in range(1, stack.shape[2]):
+            _slice = stack[:, :, i]
             if not _slice.any():
                 count += 1
         ORIENTATIONS = 2
@@ -383,3 +391,22 @@ class DataGenerator(object):
         plt.show()
         #plt.pause(0.2)
         #plt.close()
+
+    @staticmethod
+    def get_possible_tile_actions_given_grid(grid, tiles):
+        '''
+        given a grid and tiles return the tiles which can be placed in lfb
+        '''
+        next_lfb = SolutionChecker.get_next_lfb_on_grid(grid)
+
+        new_tiles = []
+        rows, cols = grid.shape
+        for i, tile in enumerate(tiles):
+            success, _ = SolutionChecker.place_element_on_grid_given_grid(
+                tile, next_lfb,
+                val=1, grid=grid, cols=cols, rows=rows, get_only_success=True
+            )
+            if not success:
+                continue
+            new_tiles.append(tile)
+        return new_tiles
