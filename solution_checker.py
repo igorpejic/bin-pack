@@ -382,8 +382,12 @@ class SolutionChecker(object):
         return np.array([np.array(x) for x in tiles])
 
     @staticmethod
+    def np_array_to_tiles(tiles):
+        return [list(x) for x in tiles]
+
+    @staticmethod
     def get_n_nonplaced_tiles(_tiles_ints):
-        _tiles_ints = [list(x) for x in _tiles_ints]
+        _tiles_ints = SolutionChecker.np_array_to_tiles(_tiles_ints)
         n_possible_tiles = len([x for x in _tiles_ints if x != [0, 0]])
         return n_possible_tiles
 

@@ -62,7 +62,7 @@ def render_to_json(node, tree=None, i=0, all_nodes={}, only_ids=False):
 
 class State(object):
 
-    def __init__(self, board, tiles, parent=None):
+    def __init__(self, board, tiles, parent=None, solution_tiles_order=None):
         self.board = np.copy(board)
         self.tiles = tiles[:]
         self.parent = parent
@@ -70,6 +70,10 @@ class State(object):
         self.children = []
         self.score = None
         self.tile_placed = None
+        if parent and parent.solution_tiles_order:
+            self.solution_tiles_order = parent.solution_tiles_order
+        else:
+            self.solution_tiles_order = []
 
     def uuid_str(self):
       return f'{self.uuid}'
