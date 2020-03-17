@@ -115,9 +115,10 @@ class DataGenerator(object):
         return instance
 
     def read_instances(self):
-        with open('puzzles.csv') as csvfile:
-            csv_reader = csv.DictReader(csvfile, quotechar='"')
+        with open('puzzles_n20_with_solutions_2.csv') as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
             for row in csv_reader:
+                print(row)
                 new_instance = DataGenerator.x_y_str_to_bins_format(row['tiles'])
                 self.instances_from_file[int(row['num_tiles'])].setdefault(
                     (int(row['board_width']), int(row['board_height'])), []).append(
