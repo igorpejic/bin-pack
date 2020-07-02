@@ -95,7 +95,7 @@ class SolutionChecker(object):
         return SolutionChecker.get_next_lfb_on_grid(self.grid)
 
     @staticmethod
-    def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows, get_only_success=False):
+    def place_element_on_grid_given_grid(_bin, position, val, grid, cols, rows, get_only_success=False, colorful_states=False):
 
         if position[1] + _bin[1] > cols:
             # print(f'{position[1] + _bin[1]} bigger than width')
@@ -107,12 +107,18 @@ class SolutionChecker(object):
         # need to check only the width as height is always free
         slice_of_new_grid_any_one = grid[position[0], position[1]: position[1] + _bin[1]]
 
-        # is it 1 or any other number ??
-        if GLOBAL_OCCUPIED_VAL in slice_of_new_grid_any_one:
-            return False, None
-
-        elif get_only_success:
-            return True, None
+        # is any number in slice non-zero ??
+        if colorful_states:
+            if np.any(slice_of_new_grid_any_one):
+                return False, None
+            elif get_only_success:
+                return True, None
+        # is any number in slice 1??
+        else:
+            if GLOBAL_OCCUPIED_VAL in slice_of_new_grid_any_one:
+                return False, None
+            elif get_only_success:
+                return True, None
 
         grid[position[0]: position[0] + _bin[0], position[1]: position[1] + _bin[1]] = val
         # for i in range(int(_bin[1])):
@@ -253,9 +259,10 @@ class SolutionChecker(object):
         plt.close()
 
     @staticmethod
-    def get_next_turn(state, tile, val=1, get_only_success=False, destroy_state=False):
+    def get_next_turn(state, tile, val=1, get_only_success=False, destroy_state=False, colorful_states=False):
         '''
         destroy_state - will ruin the state.board, populating it with val
+        colorful_state - not all occupied states are 1; for visualization purposes
         '''
         next_position = SolutionChecker.get_next_lfb_on_grid(state.board)
         # one without the other should not be possible
@@ -272,7 +279,7 @@ class SolutionChecker(object):
         success, new_board = SolutionChecker.place_element_on_grid_given_grid(
             tile, next_position,
             val, board, get_cols(state.board), get_rows(state.board),
-            get_only_success=get_only_success)
+            get_only_success=get_only_success, colorful_states=colorful_states)
 
         if not success:
             # cannot place the tile. this branch will not be considered
@@ -281,21 +288,27 @@ class SolutionChecker(object):
 
 
     @staticmethod
-    def get_next_occupied_col(board, next_position):
+    def get_next_occupied_col(board, next_position, colorful_states=False):
         that_position_row_until_next_occupied = board[
             next_position[0], next_position[1]:]
 
-        res = search.find_first(GLOBAL_OCCUPIED_VAL, that_position_row_until_next_occupied)
-        if res == -1:
-            return board.shape[1]
-        res_col = next_position[1] + res 
+        if colorful_states:
+            cols_with_non_zero = np.where(that_position_row_until_next_occupied!=0)
+            if cols_with_non_zero[0].size == 0:
+                return board.shape[1]
+            res_col = next_position[1] + cols_with_non_zero[0][0]
+        else:
+            res = search.find_first(GLOBAL_OCCUPIED_VAL, that_position_row_until_next_occupied)
+            if res == -1:
+                return board.shape[1]
+            res_col = next_position[1] + res 
         return res_col
 
     @staticmethod
-    def get_valid_next_moves(state, tiles, val=1):
+    def get_valid_next_moves(state, tiles, val=1, colorful_states=False):
         possible_tile_moves = []
         next_lfb = SolutionChecker.get_next_lfb_on_grid(state.board)
-        next_occupied_col = SolutionChecker.get_next_occupied_col(state.board, next_lfb)
+        next_occupied_col = SolutionChecker.get_next_occupied_col(state.board, next_lfb, colorful_states=colorful_states)
         max_allowed_col_size = next_occupied_col - next_lfb[1] 
         max_height = state.board.shape[0]
         for tile in tiles:

@@ -107,12 +107,33 @@ class State(object):
             'tiles': tiles,
             'board': board,
             'tile_placed': tile_placed,
-            'score': int(score),
+            'score': score,
             'name': self.uuid_str(),
             'children': [],
         }
         return ret
 
+    def centralize_node_with_children(self):
+
+        '''
+        positions node with children in the middle of the search tree
+        '''
+        _state = self
+        while _state.children:
+            index_with_children = None
+            for i, child in enumerate(_state.children):
+                if child.children:
+                    index_with_children = i
+            if index_with_children is None:
+                break
+            if len(_state.children) % 2 == 0:
+                middle_index = len(_state.children) // 2 - 1
+            else:
+                middle_index = len(_state.children) // 2
+            next_state = _state.children[index_with_children]
+            # print('middle index', middle_index, index_with_children, 'children:', len(state.children))
+            _state.children[middle_index], _state.children[index_with_children] = _state.children[index_with_children], _state.children[middle_index]
+            _state = next_state
 
 
     def __str__(self):
